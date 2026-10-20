@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useKeyboard, useTerminalDimensions } from '@opentui/react';
 import type { AgentInfo, AgentKey, ThreadItem, ViewMode } from './types.ts';
-import { detectAgents, filterThreads, loadAllThreads } from './data.ts';
+import { detectAgents, filterThreads, loadAllThreads, runSync } from './data.ts';
 import { Header } from './components/Header.tsx';
 import { ChatList } from './components/ChatList.tsx';
 import { ChatDetail } from './components/ChatDetail.tsx';
@@ -29,7 +29,8 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [view, setView] = useState<ViewMode>('list');
   const [agentPickerIndex, setAgentPickerIndex] = useState<number>(0);
-  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState<string>('Syncing on start...');
+  const [isSyncing, setIsSyncing] = useState<boolean>(true);
 
   const dimensions = useTerminalDimensions();
   const height = dimensions.height || 30;
@@ -43,6 +44,28 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
     filteredThreads.length > 0
       ? filteredThreads[Math.min(selectedIndex, filteredThreads.length - 1)]
       : null;
+
+  // Sync handler
+  const handleSync = useCallback(async () => {
+    setIsSyncing(true);
+    setStatusMessage('Syncing sessions...');
+    try {
+      const res = await runSync();
+      const updated = loadAllThreads();
+      setAllThreads(updated);
+      setStatusMessage(res.message);
+    } catch (e: any) {
+      setStatusMessage(`Sync failed: ${e?.message || e}`);
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setStatusMessage(''), 3000);
+    }
+  }, []);
+
+  // Automatically sync on startup
+  useEffect(() => {
+    handleSync();
+  }, [handleSync]);
 
   // Handle launching
   const doLaunch = useCallback(
@@ -123,17 +146,12 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         return;
       }
 
-      // Quick sync hotkey
-      if (!searchQuery && key.sequence === 's') {
-        setStatusMessage('Syncing...');
-        try {
-          const reloaded = loadAllThreads();
-          setAllThreads(reloaded);
-          setStatusMessage('Synced chats!');
-          setTimeout(() => setStatusMessage(''), 2000);
-        } catch {
-          setStatusMessage('Sync failed');
-        }
+      // Quick sync hotkeys: Ctrl+S anytime, or 's'/'S' when not filtering
+      if (
+        (key.ctrl && (key.name === 's' || key.sequence === 's')) ||
+        (!searchQuery && (key.sequence === 's' || key.sequence === 'S'))
+      ) {
+        handleSync();
         return;
       }
 
@@ -192,6 +210,8 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         currentCwd={currentCwd}
         totalCount={allThreads.length}
         filteredCount={filteredThreads.length}
+        isSyncing={isSyncing}
+        onTriggerSync={handleSync}
       />
 
       {/* Main Content Area */}

@@ -6,6 +6,8 @@ interface HeaderProps {
   currentCwd: string;
   totalCount: number;
   filteredCount: number;
+  isSyncing?: boolean;
+  onTriggerSync?: () => void;
 }
 
 export function Header({
@@ -14,6 +16,8 @@ export function Header({
   currentCwd,
   totalCount,
   filteredCount,
+  isSyncing = false,
+  onTriggerSync,
 }: HeaderProps) {
   const folderName = currentCwd.split(/[\\/]/).filter(Boolean).pop() || currentCwd;
 
@@ -36,14 +40,32 @@ export function Header({
             SameThread Unified Coding Agent Sessions
           </text>
         </box>
-        <box flexDirection="row" gap={1}>
-          <text color="#64748B">Scope:</text>
-          <text bold color={scopeAll ? '#F59E0B' : '#10B981'}>
-            {scopeAll ? '🌐 All Projects' : `📁 ${folderName}`}
-          </text>
-          <text dim color="#64748B">
-            (Tab to toggle)
-          </text>
+        <box flexDirection="row" gap={2} alignItems="center">
+          {/* Sync Button */}
+          <box
+            flexDirection="row"
+            gap={1}
+            paddingLeft={1}
+            paddingRight={1}
+            borderStyle="single"
+            borderColor={isSyncing ? '#F59E0B' : '#10B981'}
+            backgroundColor={isSyncing ? '#78350F' : '#064E3B'}
+            onMouseDown={onTriggerSync}
+          >
+            <text bold color={isSyncing ? '#F59E0B' : '#10B981'}>
+              {isSyncing ? '⟳ Syncing...' : '⟳ Sync (S)'}
+            </text>
+          </box>
+
+          <box flexDirection="row" gap={1}>
+            <text color="#64748B">Scope:</text>
+            <text bold color={scopeAll ? '#F59E0B' : '#10B981'}>
+              {scopeAll ? '🌐 All Projects' : `📁 ${folderName}`}
+            </text>
+            <text dim color="#64748B">
+              (Tab)
+            </text>
+          </box>
         </box>
       </box>
 

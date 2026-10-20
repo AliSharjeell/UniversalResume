@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { execSync } from 'node:child_process';
+import { execSync, spawn, spawnSync } from 'node:child_process';
 import type { AgentInfo, AgentKey, ThreadCopy, ThreadItem } from './types.ts';
 
 export const HOP_DIR = process.env.HOP_HOME || path.join(os.homedir(), '.hop');
@@ -335,3 +335,60 @@ export function filterThreads(
     );
   });
 }
+
+export async function runSync(): Promise<{ success: boolean; message: string }> {
+  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+  const universalResumeDir = path.resolve(__dirname, '..');
+
+  return new Promise((resolve) => {
+    const child = spawn(
+      pythonCmd,
+      [
+        '-c',
+        `import sys; sys.path.insert(0, r'${path.join(universalResumeDir, 'src')}'); from samethread.cli import main; sys.argv=['hop', 'sync', '-q']; main()`
+      ],
+      {
+        cwd: universalResumeDir,
+        stdio: 'ignore',
+        shell: true,
+      }
+    );
+
+    child.on('exit', (code) => {
+      resolve({
+        success: code === 0,
+        message: code === 0 ? '✓ Synced coding agent sessions' : 'Sync completed with warnings',
+      });
+    });
+
+    child.on('error', (err) => {
+      resolve({
+        success: false,
+        message: `Sync error: ${err.message}`,
+      });
+    });
+  });
+}
+
+export function runSyncSync(): boolean {
+  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+  const universalResumeDir = path.resolve(__dirname, '..');
+  try {
+    const res = spawnSync(
+      pythonCmd,
+      [
+        '-c',
+        `import sys; sys.path.insert(0, r'${path.join(universalResumeDir, 'src')}'); from samethread.cli import main; sys.argv=['hop', 'sync', '-q']; main()`
+      ],
+      {
+        cwd: universalResumeDir,
+        stdio: 'ignore',
+        shell: true,
+      }
+    );
+    return res.status === 0;
+  } catch {
+    return false;
+  }
+}
+
