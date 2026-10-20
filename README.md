@@ -59,9 +59,30 @@ None of them can see the others. So you re-explain the task, paste logs again, a
 pipx install git+https://github.com/GodrezJr2/samethread   # or: pip install git+https://github.com/GodrezJr2/samethread
 hop install                                                # hooks for every agent it finds
 hop sync                                                   # mirror existing chats once
+resume                                                     # launch the OpenTUI interactive session picker anywhere
 ```
 
 That's it. Keep working the way you do, and use each agent's own resume. `hop agents` shows what was found; `hop list` shows every copy of a chat with the command to open it.
+
+### Interactive OpenTUI Session Picker (`resume`)
+
+Built with [OpenTUI](https://github.com/anomalyco/opentui), run `resume` anywhere in your terminal to open the interactive TUI:
+
+- **Browse & Filter:** Displays all past and recent conversations, which coding agent was recently working on them, and relative time. Type to filter instantly.
+- **Folder Scopes:** Press `Tab` to toggle between the current directory and all projects across your machine.
+- **Transcript Preview:** Inspect the original goal, turn counts, and participant agents in the detail panel.
+- **Seamless Hop:** Press `Enter` on any conversation, choose which agent you want to resume with (`Codex`, `Claude Code`, `Antigravity`, `OpenCode`, `Gemini`, etc.), and jump straight into the session.
+
+| Key | Action |
+|---|---|
+| `↑` / `↓` | Navigate conversation list |
+| `Enter` | Choose coding agent to resume with |
+| `1` - `9` | Instant agent pick in resume dialog |
+| `Tab` | Toggle between current folder & all projects |
+| Type text | Live fuzzy / substring filter |
+| `Backspace` | Erase search character |
+| `s` | Run quick sync |
+| `Esc` | Clear search / Back / Exit |
 
 ## Supported agents
 
@@ -100,6 +121,8 @@ flowchart LR
 
 | Command | What it does |
 |---|---|
+| `resume` | Launch the interactive OpenTUI terminal session picker anywhere. |
+| `hop tui` | Shortcut to open the interactive OpenTUI session picker. |
 | `hop sync` | Mirror new and changed chats. The hooks run this for you. |
 | `hop list [-a]` | Chats for this folder (or all folders), with the exact resume command for every copy. |
 | `hop resume <agent> [n]` | Open chat *n* in any agent: `cc`, `oc`, `codex`, `gemini`, `qwen`, `pi`, `kimi`, `agy`, `mmx`. For Antigravity and MiniMax it seeds a new conversation, and its turns flow back to the others. |
