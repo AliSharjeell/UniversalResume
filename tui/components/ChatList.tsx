@@ -116,11 +116,11 @@ export function ChatList({
 
               {/* Right side: folder & timestamp */}
               <box flexDirection="row" gap={1} flexShrink={0} paddingLeft={2}>
-                {scopeAll && (
+                {scopeAll ? (
                   <text dim color="#64748B">
                     {thread.folderName}
                   </text>
-                )}
+                ) : null}
                 <text color={isSelected ? '#38BDF8' : '#64748B'}>
                   {thread.updatedAgo}
                 </text>

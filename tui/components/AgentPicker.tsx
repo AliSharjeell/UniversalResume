@@ -90,11 +90,11 @@ export function AgentPicker({
                 <text dim color="#64748B">
                   ({agent.cliName})
                 </text>
-                {isRecent && (
+                {isRecent ? (
                   <text bold color="#F59E0B">
                     ★ Recent
                   </text>
-                )}
+                ) : null}
               </box>
 
               {/* Right side: installed and resume mode */}

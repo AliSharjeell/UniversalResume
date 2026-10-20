@@ -89,9 +89,11 @@ export function Header({
           )}
         </box>
         <box flexDirection="row" gap={1}>
-          <text color="#94A3B8">
-            Showing <text bold color="#38BDF8">{filteredCount}</text> of <text bold color="#FFFFFF">{totalCount}</text> chats
-          </text>
+          <text color="#94A3B8">Showing</text>
+          <text bold color="#38BDF8">{String(filteredCount)}</text>
+          <text color="#94A3B8">of</text>
+          <text bold color="#FFFFFF">{String(totalCount)}</text>
+          <text color="#94A3B8">chats</text>
         </box>
       </box>
     </box>

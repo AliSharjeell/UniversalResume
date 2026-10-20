@@ -129,16 +129,16 @@ export function ChatDetail({ thread, agents }: ChatDetailProps) {
             <text color="#94A3B8">
               "{thread.firstUserPrompt.slice(0, 150)}{thread.firstUserPrompt.length > 150 ? '...' : ''}"
             </text>
-            {thread.lastAssistantReply && (
-              <>
+            {thread.lastAssistantReply ? (
+              <box flexDirection="column">
                 <text bold color="#10B981" marginTop={1}>
                   Last Assistant Reply:
                 </text>
                 <text color="#94A3B8">
                   "{thread.lastAssistantReply.slice(0, 150)}{thread.lastAssistantReply.length > 150 ? '...' : ''}"
                 </text>
-              </>
-            )}
+              </box>
+            ) : null}
           </box>
         ) : (
           <text dim color="#64748B">
