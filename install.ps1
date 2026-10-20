@@ -1,15 +1,7 @@
 # UniversalResume / SameThread one-line installer for Windows
 $ErrorActionPreference = "Stop"
 
-Write-Host @'
-   __  __      _                             __   ____                                
-  / / / /___  (_)   _____  ______________ _ / /  / __ \___  _______  ______ ___  ___ 
- / / / / __ \/ / | / / _ \/ ___/ ___/ __ `// /  / /_/ / _ \/ ___/ / / / __ `__ \/ _ \
-/ /_/ / / / / /| |/ /  __/ /  (__  ) /_/ // /  / _, _/  __(__  ) /_/ / / / / / /  __/
-\____/_/ /_/_/ |___/\___/_/  /____/\__,_//_/  /_/ |_|\___/____/\__,_/_/ /_/ /_/\___/ 
-'@ -ForegroundColor White
-
-Write-Host "Installing UniversalResume..."
+Write-Host "Installing UniversalResume..." -ForegroundColor Cyan
 
 # Check for Python
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {

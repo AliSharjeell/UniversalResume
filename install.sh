@@ -1,15 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-cat << 'EOF'
-   __  __      _                             __   ____                                
-  / / / /___  (_)   _____  ______________ _ / /  / __ \___  _______  ______ ___  ___ 
- / / / / __ \/ / | / / _ \/ ___/ ___/ __ `// /  / /_/ / _ \/ ___/ / / / __ `__ \/ _ \
-/ /_/ / / / / /| |/ /  __/ /  (__  ) /_/ // /  / _, _/  __(__  ) /_/ / / / / / /  __/
-\____/_/ /_/_/ |___/\___/_/  /____/\__,_//_/  /_/ |_|\___/____/\__,_/_/ /_/ /_/\___/ 
-EOF
-
-echo "Installing UniversalResume..."
+echo -e "\033[0;36mInstalling UniversalResume...\033[0m"
 
 # Check for Python
 if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
