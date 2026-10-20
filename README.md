@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start"><img src="https://img.shields.io/badge/setup-3_commands-5EEAD4?style=for-the-badge" alt="Setup: 3 commands"></a>
+  <a href="#one-liner-install"><img src="https://img.shields.io/badge/setup-1_command-5EEAD4?style=for-the-badge" alt="Setup: 1 command"></a>
   <a href="#supported-agents"><img src="https://img.shields.io/badge/agents-9-8AA4FF?style=for-the-badge" alt="9 agents"></a>
   <a href="#how-it-works"><img src="https://img.shields.io/badge/resume-native,_not_a_summary-E8845C?style=for-the-badge" alt="Native resume"></a>
   <a href="#interactive-opentui-session-picker-resume"><img src="https://img.shields.io/badge/UI-OpenTUI-FF4088?style=for-the-badge" alt="OpenTUI"></a>
@@ -57,80 +57,25 @@ None of them can see the others. So you re-explain the task, paste logs again, a
 
 ---
 
-## Installation & Setup
+## One-Liner Install
 
-### Prerequisites
-- **Python**: 3.9 or newer (`python --version`)
-- **Runtime**: [Bun](https://bun.sh) (recommended) or Node.js 20+
+Paste the one-liner for your OS in your terminal:
 
-### Windows
-
+### Windows (PowerShell)
 ```powershell
-# 1. Install Bun (if not already installed)
-powershell -c "irm bun.sh/install.ps1 | iex"
-
-# 2. Clone repository
-git clone https://github.com/AliSharjeell/UniversalResume.git
-cd UniversalResume
-
-# 3. Install dependencies and register global resume CLI
-bun install
-npm link
-pip install -e .
-
-# 4. Wire auto-sync hooks and initial sync
-hop install
-hop sync
-
-# 5. Launch anywhere in terminal!
-resume
+irm https://raw.githubusercontent.com/AliSharjeell/UniversalResume/main/install.ps1 | iex
 ```
 
-### macOS
-
+### macOS & Linux
 ```bash
-# 1. Install Bun (if not already installed)
-curl -fsSL https://bun.sh/install | bash
-
-# 2. Clone repository
-git clone https://github.com/AliSharjeell/UniversalResume.git
-cd UniversalResume
-
-# 3. Install dependencies and register global resume CLI
-bun install
-npm link
-pip install -e .
-
-# 4. Wire auto-sync hooks and initial sync
-hop install
-hop sync
-
-# 5. Launch anywhere in terminal!
-resume
+curl -fsSL https://raw.githubusercontent.com/AliSharjeell/UniversalResume/main/install.sh | bash
 ```
 
-### Linux
-
+Once installed, just type:
 ```bash
-# 1. Install Bun (if not already installed)
-curl -fsSL https://bun.sh/install | bash
-
-# 2. Clone repository
-git clone https://github.com/AliSharjeell/UniversalResume.git
-cd UniversalResume
-
-# 3. Install dependencies and register global resume CLI
-bun install
-npm link
-pip install -e .
-
-# 4. Wire auto-sync hooks and initial sync
-hop install
-hop sync
-
-# 5. Launch anywhere in terminal!
 resume
 ```
+Every time it opens, it automatically syncs with all your coding agents and lets you hop straight into any conversation!
 
 ---
 
