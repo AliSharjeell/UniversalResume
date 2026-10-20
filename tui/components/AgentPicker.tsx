@@ -13,113 +13,49 @@ export function AgentPicker({
   selectedIndex,
 }: AgentPickerProps) {
   return (
-    <box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor="#10B981"
-      padding={1}
-      width="100%"
-      height="100%"
-      gap={1}
-    >
-      {/* Header */}
-      <box flexDirection="column" borderStyle="single" borderColor="#047857" padding={1}>
-        <box flexDirection="row" justifyContent="space-between">
-          <text bold color="#10B981">
-            🚀 RESUME WITH AGENT
-          </text>
-          <text dim color="#94A3B8">
-            [Esc] Back to chat list
-          </text>
-        </box>
-        <box flexDirection="row" gap={1} marginTop={1}>
-          <text color="#CBD5E1">Target Chat:</text>
-          <text bold color="#FFFFFF">
-            {thread.title}
-          </text>
-        </box>
-        <box flexDirection="row" gap={1}>
-          <text color="#94A3B8">Directory:</text>
-          <text color="#38BDF8">
-            {thread.cwd}
-          </text>
-        </box>
-      </box>
+    <box flexDirection="column" flexGrow={1}>
+      <text bold color="#FFFFFF" marginBottom={1}>
+        {`Resume: ${thread.baseTitle}`}
+      </text>
+      <text dim color="#94A3B8" marginBottom={1}>
+        {`Directory: ${thread.cwd}`}
+      </text>
+      <text color="#F59E0B" marginBottom={1}>
+        Select agent to resume with (press 1-9 or Enter):
+      </text>
 
-      {/* Instruction */}
-      <box marginTop={1}>
-        <text bold color="#F59E0B">
-          Choose which coding agent to open this conversation in (Press [1-9] or [↑/↓] + Enter):
-        </text>
-      </box>
-
-      {/* Agents List */}
-      <box flexDirection="column" gap={0} flexGrow={1} marginTop={1}>
+      <box flexDirection="column" marginBottom={1}>
         {agents.map((agent, idx) => {
           const isSelected = idx === selectedIndex;
           const isRecent = agent.key === thread.recentAgent;
           const hasCopy = Boolean(thread.copies[agent.key]);
-
-          let statusBadge = agent.installed ? 'Installed' : 'Not found';
-          let modeBadge = hasCopy
-            ? 'Native copy ready'
+          const mode = hasCopy
+            ? 'native copy'
             : agent.writable
-            ? 'Native mirror'
-            : 'Seed handoff';
+            ? 'native mirror'
+            : 'seeded handoff';
+          const recentTag = isRecent ? ' (recent agent)' : '';
+
+          const prefix = isSelected ? '> ' : '  ';
+          const num = `${agent.shortcut}. `;
+          const name = agent.name.padEnd(24);
+          const modeStr = mode.padEnd(20);
 
           return (
-            <box
+            <text
               key={agent.key}
-              flexDirection="row"
-              justifyContent="space-between"
-              paddingLeft={1}
-              paddingRight={1}
-              backgroundColor={isSelected ? '#064E3B' : undefined}
+              bold={isSelected}
+              color={isSelected ? '#38BDF8' : '#CBD5E1'}
             >
-              {/* Left side: pointer, number, name */}
-              <box flexDirection="row" gap={1} alignItems="center">
-                <text bold color="#10B981">
-                  {isSelected ? '❯' : ' '}
-                </text>
-                <text bold color="#38BDF8">
-                  [{agent.shortcut}]
-                </text>
-                <text bold color={agent.color}>
-                  {agent.name}
-                </text>
-                <text dim color="#64748B">
-                  ({agent.cliName})
-                </text>
-                {isRecent ? (
-                  <text bold color="#F59E0B">
-                    ★ Recent
-                  </text>
-                ) : null}
-              </box>
-
-              {/* Right side: installed and resume mode */}
-              <box flexDirection="row" gap={2}>
-                <text color={hasCopy ? '#10B981' : '#38BDF8'}>
-                  [{modeBadge}]
-                </text>
-                <text color={agent.installed ? '#10B981' : '#64748B'}>
-                  {agent.installed ? '● ready' : '○ missing'}
-                </text>
-              </box>
-            </box>
+              {`${prefix}${num}${name}${modeStr}${recentTag}`}
+            </text>
           );
         })}
       </box>
 
-      {/* Bottom Hint */}
-      <box borderStyle="single" borderColor="#334155" padding={1} flexDirection="row" justifyContent="space-between">
-        <text color="#94A3B8">
-          Tip: Hop writes full history into native session stores or seeds via handoff transcript.
-        </text>
-        <text bold color="#10B981">
-          [Enter] Launch Selected Agent
-        </text>
-      </box>
+      <text dim color="#64748B">
+        [Enter] Launch   [1-9] Quick Pick   [Esc] Back to list
+      </text>
     </box>
   );
 }

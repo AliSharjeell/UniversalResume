@@ -6,37 +6,25 @@ interface ChatListProps {
   selectedIndex: number;
   maxVisible?: number;
   scopeAll: boolean;
+  termWidth?: number;
 }
 
 export function ChatList({
   threads,
   selectedIndex,
-  maxVisible = 15,
+  maxVisible = 16,
   scopeAll,
+  termWidth = 80,
 }: ChatListProps) {
   if (threads.length === 0) {
     return (
-      <box
-        flexDirection="column"
-        borderStyle="round"
-        borderColor="#334155"
-        padding={1}
-        flexGrow={1}
-        height="100%"
-      >
-        <box marginBottom={1}>
-          <text bold color="#94A3B8">
-            CHATS LIST
-          </text>
-        </box>
-        <box flexDirection="column" padding={2} alignItems="center" justifyContent="center">
-          <text color="#E2E8F0" bold>
-            No matching conversations found
-          </text>
-          <text dim color="#64748B" marginTop={1}>
-            Press Tab to view all projects, or Backspace to clear filter
-          </text>
-        </box>
+      <box flexDirection="column" padding={2} alignItems="center" justifyContent="center" flexGrow={1}>
+        <text color="#E2E8F0" bold>
+          No conversations found
+        </text>
+        <text dim color="#64748B" marginTop={1}>
+          Press Tab to switch scope, or Backspace to clear filter
+        </text>
       </box>
     );
   }
@@ -56,79 +44,49 @@ export function ChatList({
   }
   const visibleThreads = threads.slice(startIdx, startIdx + maxVisible);
 
+  // Column calculations
+  const totalW = Math.max(70, termWidth - 6);
+  const agentColW = 12;
+  const timeColW = 11;
+  const folderColW = scopeAll ? 18 : 0;
+  const titleColW = Math.max(25, totalW - 2 - agentColW - timeColW - folderColW);
+
   return (
-    <box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor="#06B6D4"
-      padding={1}
-      flexGrow={1}
-      height="100%"
-    >
-      {/* Title bar */}
-      <box flexDirection="row" justifyContent="space-between" marginBottom={1}>
-        <text bold color="#38BDF8">
-          RECENT CONVERSATIONS
-        </text>
-        <text dim color="#64748B">
-          {safeSelected + 1} / {threads.length}
-        </text>
-      </box>
+    <box flexDirection="column" flexGrow={1} marginBottom={1}>
+      {visibleThreads.map((thread, idx) => {
+        const actualIndex = startIdx + idx;
+        const isSelected = actualIndex === safeSelected;
 
-      {/* Items list */}
-      <box flexDirection="column" gap={0} flexGrow={1}>
-        {visibleThreads.map((thread, idx) => {
-          const actualIndex = startIdx + idx;
-          const isSelected = actualIndex === safeSelected;
+        const prefix = isSelected ? '> ' : '  ';
 
-          return (
-            <box
-              key={thread.tid}
-              flexDirection="row"
-              justifyContent="space-between"
-              paddingLeft={1}
-              paddingRight={1}
-              backgroundColor={isSelected ? '#0F2942' : undefined}
-            >
-              {/* Left side: pointer, agent badge, title */}
-              <box flexDirection="row" gap={1} flexGrow={1} flexShrink={1}>
-                {isSelected ? (
-                  <text bold color="#38BDF8">
-                    ❯
-                  </text>
-                ) : (
-                  <text color="#334155"> </text>
-                )}
+        // Truncate title
+        let title = thread.baseTitle;
+        if (title.length > titleColW - 1) {
+          title = title.slice(0, titleColW - 2) + '…';
+        }
+        const titleStr = title.padEnd(titleColW);
 
-                {/* Agent badge */}
-                <text bold color={thread.recentAgentColor}>
-                  [{thread.recentAgentName}]
-                </text>
+        const agentStr = thread.recentAgentName.padEnd(agentColW);
+        const folderStr = scopeAll
+          ? (thread.folderName.length > folderColW - 1
+              ? thread.folderName.slice(0, folderColW - 2) + '…'
+              : thread.folderName
+            ).padEnd(folderColW)
+          : '';
+        const timeStr = thread.updatedAgo.padStart(timeColW);
 
-                {/* Title */}
-                <text
-                  bold={isSelected}
-                  color={isSelected ? '#FFFFFF' : '#CBD5E1'}
-                >
-                  {thread.baseTitle}
-                </text>
-              </box>
+        const line = `${prefix}${titleStr}${agentStr}${folderStr}${timeStr}`;
 
-              {/* Right side: folder & timestamp */}
-              <box flexDirection="row" gap={1} flexShrink={0} paddingLeft={2}>
-                {scopeAll ? (
-                  <text dim color="#64748B">
-                    {thread.folderName}
-                  </text>
-                ) : null}
-                <text color={isSelected ? '#38BDF8' : '#64748B'}>
-                  {thread.updatedAgo}
-                </text>
-              </box>
-            </box>
-          );
-        })}
-      </box>
+        return (
+          <text
+            key={thread.tid}
+            bold={isSelected}
+            color={isSelected ? '#38BDF8' : '#CBD5E1'}
+          >
+            {line}
+          </text>
+        );
+      })}
     </box>
   );
 }

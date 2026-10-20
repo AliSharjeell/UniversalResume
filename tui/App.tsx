@@ -4,7 +4,6 @@ import type { AgentInfo, AgentKey, ThreadItem, ViewMode } from './types.ts';
 import { detectAgents, filterThreads, loadAllThreads, runSync } from './data.ts';
 import { Header } from './components/Header.tsx';
 import { ChatList } from './components/ChatList.tsx';
-import { ChatDetail } from './components/ChatDetail.tsx';
 import { AgentPicker } from './components/AgentPicker.tsx';
 import { Footer } from './components/Footer.tsx';
 
@@ -19,23 +18,26 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   const [allThreads, setAllThreads] = useState<ThreadItem[]>(() => loadAllThreads());
   const agents = useMemo<AgentInfo[]>(() => detectAgents(), []);
 
-  // Determine initial scope
-  const hasLocal = useMemo(() => {
-    return filterThreads(allThreads, '', false, currentCwd).length > 0;
+  // Counts
+  const inFolderCount = useMemo(() => {
+    return filterThreads(allThreads, '', false, currentCwd).length;
   }, [allThreads, currentCwd]);
 
-  const [scopeAll, setScopeAll] = useState<boolean>(!hasLocal);
+  const globalCount = allThreads.length;
+
+  const [scopeAll, setScopeAll] = useState<boolean>(inFolderCount === 0);
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [view, setView] = useState<ViewMode>('list');
   const [agentPickerIndex, setAgentPickerIndex] = useState<number>(0);
-  const [statusMessage, setStatusMessage] = useState<string>('Syncing on start...');
-  const [isSyncing, setIsSyncing] = useState<boolean>(true);
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const dimensions = useTerminalDimensions();
-  const height = dimensions.height || 30;
+  const height = dimensions.height || 24;
+  const width = dimensions.width || 80;
 
-  // Filtered threads list
+  // Filtered list
   const filteredThreads = useMemo(() => {
     return filterThreads(allThreads, searchQuery, scopeAll, currentCwd);
   }, [allThreads, searchQuery, scopeAll, currentCwd]);
@@ -45,29 +47,28 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
       ? filteredThreads[Math.min(selectedIndex, filteredThreads.length - 1)]
       : null;
 
-  // Sync handler
+  // Background sync
   const handleSync = useCallback(async () => {
     setIsSyncing(true);
-    setStatusMessage('Syncing sessions...');
+    setStatusMessage('Syncing...');
     try {
-      const res = await runSync();
+      await runSync();
       const updated = loadAllThreads();
       setAllThreads(updated);
-      setStatusMessage(res.message);
-    } catch (e: any) {
-      setStatusMessage(`Sync failed: ${e?.message || e}`);
+      setStatusMessage('Synced');
+    } catch {
+      setStatusMessage('Sync failed');
     } finally {
       setIsSyncing(false);
-      setTimeout(() => setStatusMessage(''), 3000);
+      setTimeout(() => setStatusMessage(''), 2500);
     }
   }, []);
 
-  // Automatically sync on startup
+  // Auto-sync on startup
   useEffect(() => {
     handleSync();
   }, [handleSync]);
 
-  // Handle launching
   const doLaunch = useCallback(
     (thread: ThreadItem, agentKey: AgentKey) => {
       onLaunch(thread, agentKey);
@@ -75,7 +76,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
     [onLaunch]
   );
 
-  // Keyboard navigation
+  // Keyboard controls
   useKeyboard((key) => {
     if (key.ctrl && key.name === 'c') {
       onExit();
@@ -131,8 +132,6 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
 
       if (key.name === 'return') {
         if (selectedThread) {
-          // Switch to agent picker
-          // Find index of recent agent
           const recentIdx = agents.findIndex((a) => a.key === selectedThread.recentAgent);
           setAgentPickerIndex(recentIdx >= 0 ? recentIdx : 0);
           setView('agent-picker');
@@ -146,16 +145,13 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         return;
       }
 
-      // Quick sync hotkeys: Ctrl+S anytime, or 's'/'S' when not filtering
-      if (
-        (key.ctrl && (key.name === 's' || key.sequence === 's')) ||
-        (!searchQuery && (key.sequence === 's' || key.sequence === 'S'))
-      ) {
+      // Manual sync hotkey
+      if ((key.ctrl && key.name === 's') || (!searchQuery && (key.sequence === 's' || key.sequence === 'S'))) {
         handleSync();
         return;
       }
 
-      // Append printable characters to search query
+      // Printable characters
       if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
         setSearchQuery((q) => q + key.sequence);
         setSelectedIndex(0);
@@ -177,7 +173,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         return;
       }
 
-      // Shortcut numbers 1-9
+      // Quick pick numbers 1-9
       if (key.sequence && /^[1-9]$/.test(key.sequence)) {
         const num = parseInt(key.sequence, 10);
         if (num >= 1 && num <= agents.length) {
@@ -199,45 +195,46 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
     }
   });
 
-  const maxVisibleChats = Math.max(5, height - 12);
+  const folderName = currentCwd.split(/[\\/]/).filter(Boolean).pop() || currentCwd;
+  const maxVisibleChats = Math.max(5, height - 7);
 
   return (
-    <box flexDirection="column" width="100%" height="100%" padding={0}>
-      {/* Top Header */}
-      <Header
-        searchQuery={searchQuery}
-        scopeAll={scopeAll}
-        currentCwd={currentCwd}
-        totalCount={allThreads.length}
-        filteredCount={filteredThreads.length}
-        isSyncing={isSyncing}
-        onTriggerSync={handleSync}
-      />
-
-      {/* Main Content Area */}
+    <box
+      flexDirection="column"
+      width="100%"
+      height="100%"
+      borderStyle="round"
+      borderColor="#475569"
+      padding={1}
+    >
       {view === 'list' ? (
-        <box flexDirection="row" flexGrow={1} width="100%" gap={1} marginTop={0}>
+        <>
+          <Header
+            searchQuery={searchQuery}
+            scopeAll={scopeAll}
+            inFolderCount={inFolderCount}
+            globalCount={globalCount}
+            isSyncing={isSyncing}
+            folderName={folderName}
+          />
           <ChatList
             threads={filteredThreads}
             selectedIndex={selectedIndex}
             maxVisible={maxVisibleChats}
             scopeAll={scopeAll}
+            termWidth={width}
           />
-          <ChatDetail thread={selectedThread} agents={agents} />
-        </box>
+        </>
       ) : (
-        <box flexDirection="column" flexGrow={1} width="100%" marginTop={0}>
-          {selectedThread && (
-            <AgentPicker
-              thread={selectedThread}
-              agents={agents}
-              selectedIndex={agentPickerIndex}
-            />
-          )}
-        </box>
+        selectedThread && (
+          <AgentPicker
+            thread={selectedThread}
+            agents={agents}
+            selectedIndex={agentPickerIndex}
+          />
+        )
       )}
 
-      {/* Footer Status & Keys */}
       <Footer view={view} statusMessage={statusMessage} />
     </box>
   );
