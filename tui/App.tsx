@@ -211,6 +211,23 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   const folderName = currentCwd.split(/[\\/]/).filter(Boolean).pop() || currentCwd;
   const maxVisibleChats = Math.max(5, height - 8);
 
+  if (view === 'intro') {
+    return (
+      <box
+        flexDirection="column"
+        width="100%"
+        height="100%"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <EyeStartupTransition
+          isSyncing={isSyncing}
+          onComplete={() => setView('list')}
+        />
+      </box>
+    );
+  }
+
   return (
     <box
       flexDirection="column"
@@ -220,12 +237,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
       borderColor="#404040"
       padding={1}
     >
-      {view === 'intro' ? (
-        <EyeStartupTransition
-          isSyncing={isSyncing}
-          onComplete={() => setView('list')}
-        />
-      ) : view === 'list' ? (
+      {view === 'list' ? (
         <>
           <Header
             searchQuery={searchQuery}

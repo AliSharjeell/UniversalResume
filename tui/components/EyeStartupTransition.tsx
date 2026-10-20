@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { EYE_FRAMES, FRAME_DELAYS_MS } from '../assets/eyeFrames.ts';
+import { EYE_COLOR_FRAMES, FRAME_DELAYS_MS, type ColorLine } from '../assets/eyeFramesColor.ts';
 
 interface EyeStartupTransitionProps {
   onComplete: () => void;
@@ -13,15 +13,14 @@ export function EyeStartupTransition({
   const [frameIdx, setFrameIdx] = useState<number>(0);
 
   useEffect(() => {
-    if (frameIdx >= EYE_FRAMES.length - 1) {
-      // Small pause on final black frame before revealing TUI
+    if (frameIdx >= EYE_COLOR_FRAMES.length - 1) {
       const timeout = setTimeout(() => {
         onComplete();
-      }, 50);
+      }, 40);
       return () => clearTimeout(timeout);
     }
 
-    const delay = FRAME_DELAYS_MS[frameIdx] ?? 25;
+    const delay = FRAME_DELAYS_MS[frameIdx] ?? 20;
     const timeout = setTimeout(() => {
       setFrameIdx((i) => i + 1);
     }, delay);
@@ -29,7 +28,7 @@ export function EyeStartupTransition({
     return () => clearTimeout(timeout);
   }, [frameIdx, onComplete]);
 
-  const currentLines = EYE_FRAMES[frameIdx] || [];
+  const currentLines: ColorLine[] = EYE_COLOR_FRAMES[frameIdx] || [];
 
   return (
     <box
@@ -41,17 +40,21 @@ export function EyeStartupTransition({
       height="100%"
     >
       <box flexDirection="column">
-        {currentLines.map((line, idx) => (
-          <text key={idx} color="#FFFFFF">
-            {line}
-          </text>
+        {currentLines.map((line, lineIdx) => (
+          <box key={lineIdx} flexDirection="row">
+            {line.map(([text, color], spanIdx) => (
+              <text key={spanIdx} color={color}>
+                {text}
+              </text>
+            ))}
+          </box>
         ))}
       </box>
 
       <box
         flexDirection="row"
         justifyContent="space-between"
-        width={68}
+        width={80}
         marginTop={1}
       >
         <text color="#737373">
