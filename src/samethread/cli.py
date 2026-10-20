@@ -96,16 +96,25 @@ def cmd_resume(args):
     except KeyError:
         sys.exit(f'Unknown agent "{args.agent}". Supported: {", ".join(AGENTS)}')
     agent = AGENTS[key]
-    th = pick(scoped(args), args.query)
+    th = pick(scoped(args), args.query) or (pick(all_threads(), args.query) if args.query else None)
     if not th:
         sys.exit('No matching chat. See: hop list')
     copies = [k for k in th['copies'] if k.startswith(key + ':')]
     if copies:
         best = max(copies, key=lambda k: (th['copies'][k]['upto'], th['copies'][k]['owned']))
         launch(agent.resume_cmd(best.split(':', 1)[1]), th['cwd'])
-    if not agent.writable:
-        seed(agent, th)
-    sys.exit(f'No {agent.name} copy of "{thread_title(th)}" yet. Run: hop sync')
+    if agent.writable:
+        try:
+            cfg = load_config()
+            res = agent.write(None, th['cwd'], render(th, cfg), thread_title(th), {})
+            if res:
+                sid, seen, sig = res
+                th['copies'][f'{key}:{sid}'] = {'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
+                write_json(os.path.join(THREAD_DIR, th['tid'] + '.json'), th)
+                launch(agent.resume_cmd(sid), th['cwd'])
+        except Exception:
+            pass
+    seed(agent, th)
 
 
 def cmd_agents(args):
