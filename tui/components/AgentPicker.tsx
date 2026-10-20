@@ -1,16 +1,18 @@
 import React from 'react';
-import type { AgentInfo, ThreadItem } from '../types.ts';
+import type { AgentInfo, AgentKey, ThreadItem } from '../types.ts';
 
 interface AgentPickerProps {
   thread: ThreadItem;
   agents: AgentInfo[];
   selectedIndex: number;
+  onSelect?: (agentKey: AgentKey) => void;
 }
 
 export function AgentPicker({
   thread,
   agents,
   selectedIndex,
+  onSelect,
 }: AgentPickerProps) {
   return (
     <box flexDirection="column" flexGrow={1}>
@@ -47,6 +49,7 @@ export function AgentPicker({
               key={agent.key}
               width="100%"
               backgroundColor={isSelected ? '#262626' : undefined}
+              onMouseDown={() => onSelect && onSelect(agent.key)}
             >
               <text
                 bold={isSelected}

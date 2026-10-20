@@ -7,6 +7,8 @@ interface HeaderProps {
   globalCount: number;
   isSyncing: boolean;
   folderName: string;
+  onToggleScope?: () => void;
+  onTriggerSync?: () => void;
 }
 
 export function Header({
@@ -16,6 +18,8 @@ export function Header({
   globalCount,
   isSyncing,
   folderName,
+  onToggleScope,
+  onTriggerSync,
 }: HeaderProps) {
   return (
     <box flexDirection="column" marginBottom={1}>
@@ -30,7 +34,7 @@ export function Header({
           Tab to switch scope:
         </text>
         <box flexDirection="row" justifyContent="space-between" width="100%">
-          <box flexDirection="row" gap={2}>
+          <box flexDirection="row" gap={2} onMouseDown={() => onToggleScope && onToggleScope()}>
             <text bold={!scopeAll} color={!scopeAll ? '#FFFFFF' : '#737373'}>
               {!scopeAll ? `[ In Folder: ${folderName} (${inFolderCount}) ]` : `  In Folder: ${folderName} (${inFolderCount})  `}
             </text>
@@ -38,9 +42,11 @@ export function Header({
               {scopeAll ? `[ Global (${globalCount}) ]` : `  Global (${globalCount})  `}
             </text>
           </box>
-          <text color={isSyncing ? '#FFFFFF' : '#737373'}>
-            {isSyncing ? 'Syncing...' : 'Synced'}
-          </text>
+          <box onMouseDown={() => onTriggerSync && onTriggerSync()}>
+            <text color={isSyncing ? '#FFFFFF' : '#737373'}>
+              {isSyncing ? 'Syncing...' : 'Synced'}
+            </text>
+          </box>
         </box>
       </box>
 

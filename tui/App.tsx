@@ -234,6 +234,11 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
             globalCount={globalCount}
             isSyncing={isSyncing}
             folderName={folderName}
+            onToggleScope={() => {
+              setScopeAll((prev) => !prev);
+              setSelectedIndex(0);
+            }}
+            onTriggerSync={handleSync}
           />
           <ChatList
             threads={filteredThreads}
@@ -241,6 +246,12 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
             maxVisible={maxVisibleChats}
             scopeAll={scopeAll}
             termWidth={width}
+            onSelect={(idx) => setSelectedIndex(idx)}
+            onChoose={(th) => {
+              const recentIdx = agents.findIndex((a) => a.key === th.recentAgent);
+              setAgentPickerIndex(recentIdx >= 0 ? recentIdx : 0);
+              setView('agent-picker');
+            }}
           />
         </>
       ) : (
@@ -249,6 +260,9 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
             thread={selectedThread}
             agents={agents}
             selectedIndex={agentPickerIndex}
+            onSelect={(agentKey) => {
+              doLaunch(selectedThread, agentKey);
+            }}
           />
         )
       )}

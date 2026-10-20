@@ -304,3 +304,7 @@ def main_resume_tui():
         sys.argv = ['hop', 'list'] + sys.argv[1:]
         main()
 
+
+if __name__ == '__main__':
+    main()
+

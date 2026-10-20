@@ -7,6 +7,8 @@ interface ChatListProps {
   maxVisible?: number;
   scopeAll: boolean;
   termWidth?: number;
+  onSelect?: (index: number) => void;
+  onChoose?: (thread: ThreadItem) => void;
 }
 
 export function ChatList({
@@ -15,6 +17,8 @@ export function ChatList({
   maxVisible = 15,
   scopeAll,
   termWidth = 80,
+  onSelect,
+  onChoose,
 }: ChatListProps) {
   if (threads.length === 0) {
     return (
@@ -85,6 +89,10 @@ export function ChatList({
             key={thread.tid}
             width="100%"
             backgroundColor={isSelected ? '#262626' : undefined}
+            onMouseDown={() => {
+              if (onSelect) onSelect(actualIndex);
+              if (onChoose) onChoose(thread);
+            }}
           >
             <text
               bold={isSelected}

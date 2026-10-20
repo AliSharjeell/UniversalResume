@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo -e "\033[0;36mInstalling UniversalResume...\033[0m"
+echo -e "\033[1;37mInstalling UniversalResume...\033[0m"
 
 # Check for Python
 if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then

@@ -49,7 +49,7 @@ export function launchResume(thread: ThreadItem, agentKey: AgentKey, onComplete?
     process.stdin.resume();
   }
 
-  const child = spawn(pythonCmd, ['-m', 'samethread.cli', 'resume', agentKey, thread.tid], {
+  const child = spawn(pythonCmd, ['-m', 'samethread', 'resume', agentKey, thread.tid], {
     cwd: targetCwd,
     stdio: 'inherit',
     env,

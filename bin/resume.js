@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,12 +57,19 @@ if (fs.existsSync(pendingLaunchFile)) {
       PYTHONPATH: srcDir + (process.platform === 'win32' ? ';' : ':') + (process.env.PYTHONPATH || ''),
     };
 
-    const agentProc = spawnSync(pythonCmd, ['-m', 'samethread.cli', 'resume', launchSpec.agentKey, launchSpec.tid], {
+    const agentProc = spawn(pythonCmd, ['-m', 'samethread', 'resume', launchSpec.agentKey, launchSpec.tid], {
       cwd: targetCwd,
       stdio: 'inherit',
       env,
     });
 
-    process.exit(agentProc.status ?? 0);
+    agentProc.on('exit', (code) => {
+      process.exit(code ?? 0);
+    });
+
+    agentProc.on('error', (err) => {
+      console.error(`Failed to launch agent: ${err.message}`);
+      process.exit(1);
+    });
   }
 }
