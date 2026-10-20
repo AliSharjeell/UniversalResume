@@ -45,9 +45,9 @@ resume
 
 ## Why Universal Resume?
 
-- **Hit rate limits on Claude?** Instantly switch to **Codex**, **OpenCode**, or **Antigravity**.
-- **Started in Codex?** Hop into **Claude Code** or **Gemini CLI** with full history and context preserved.
-- **Zero copy-pasting:** Every conversation across 9 coding agents is automatically tracked and mirrored into each agent's native format.
+- **Hit rate limits on Claude?** Instantly switch to **Codex**, **Cursor CLI**, **Grok Build**, or **Antigravity**.
+- **Started in Codex?** Hop into **Claude Code**, **DeepSeek Harness**, **Hermes**, or **OpenClaw** with full history and context preserved.
+- **Zero copy-pasting:** Every conversation across 15 coding agents is automatically tracked and mirrored into each agent's native format or continuous handoff.
 - **Run anywhere:** Works in any directory, terminal, or shell on Windows, macOS, and Linux.
 
 ---
@@ -58,13 +58,19 @@ resume
 |---|---|---|
 | **Claude Code** | `claude` | Native session resume |
 | **Codex CLI** | `codex` | Native session resume |
+| **Cursor CLI** | `cursor-agent` / `cursor` | Continuous handoff |
 | **Antigravity CLI** | `agy` | Seeded continuous handoff |
+| **Grok Build** | `grok` | Continuous handoff |
+| **DeepSeek Harness** | `deepseek` | Continuous handoff |
+| **Hermes Agent** | `hermes` | Continuous handoff |
+| **OpenClaw** | `openclaw` | Continuous handoff |
+| **Aider** | `aider` | Continuous handoff |
 | **OpenCode** | `opencode` | Native session resume |
-| **Gemini CLI** | `gemini` | Native session resume |
-| **MiniMax Code** | `minimax` | Seeded continuous handoff |
+| **OpenHands** | `openhands` | Continuous handoff |
 | **Qwen Code** | `qwen` | Native session resume |
-| **Pi Agent** | `pi` | Native session resume |
 | **Kimi Code** | `kimi` | Native session resume |
+| **MiniMax Code** | `minimax` | Seeded continuous handoff |
+| **Pi Agent** | `pi` | Native session resume |
 
 ---
 

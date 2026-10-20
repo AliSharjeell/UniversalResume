@@ -5,13 +5,16 @@ import os
 AGENTS = [  # order along the thread, colour, label, how hop reaches it
     ('CC', '#E8845C', 'Claude Code', 'native'),
     ('CX', '#F5C451', 'Codex', 'native'),
-    ('KM', '#34D399', 'Kimi Code', 'native'),
-    ('OC', '#5EEAD4', 'OpenCode', 'native'),
-    ('GM', '#60A5FA', 'Gemini CLI', 'native'),
+    ('CR', '#38BDF8', 'Cursor CLI', 'read + handoff'),
     ('AG', '#8AA4FF', 'Antigravity', 'read + handoff'),
-    ('QW', '#A78BFA', 'Qwen Code', 'native'),
-    ('PI', '#F472B6', 'Pi', 'native'),
+    ('GK', '#E2E8F0', 'Grok Build', 'read + handoff'),
+    ('DS', '#6366F1', 'DeepSeek', 'read + handoff'),
+    ('HM', '#EC4899', 'Hermes', 'read + handoff'),
+    ('OC', '#5EEAD4', 'OpenCode', 'native'),
+    ('KM', '#34D399', 'Kimi Code', 'native'),
     ('MM', '#FB7185', 'MiniMax Code', 'read + handoff'),
+    ('QW', '#A78BFA', 'Qwen Code', 'native'),
+    ('AD', '#A855F7', 'Aider', 'read + handoff'),
 ]
 W, H, Y, AMP = 1280, 600, 410, 26
 xs = [110 + i * (1060 / (len(AGENTS) - 1)) for i in range(len(AGENTS))]
@@ -45,7 +48,7 @@ for i, ((code, color, label, mode), x, y) in enumerate(zip(AGENTS, xs, ys)):
 d = path()
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="t d">
   <title id="t">SameThread</title>
-  <desc id="d">One chat thread running through Claude Code, Codex, Kimi Code, OpenCode, Gemini CLI, Antigravity, Qwen Code, Pi and MiniMax Code.</desc>
+  <desc id="d">One chat thread running through Claude Code, Codex, Cursor CLI, Antigravity, Grok Build, DeepSeek, Hermes, OpenCode, Kimi, MiniMax, Qwen Code, and Aider.</desc>
   <defs>
     <style>
       .sans {{ font-family: system-ui, -apple-system, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif; }}

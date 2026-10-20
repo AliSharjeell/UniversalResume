@@ -38,15 +38,75 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     writable: true,
     description: 'Anthropic JSONL session store',
   },
+  cursor: {
+    name: 'Cursor CLI',
+    shortName: 'Cursor',
+    cliName: 'cursor-agent',
+    color: '#38BDF8', // sky blue
+    badgeBg: '#0369A1',
+    shortcut: '3',
+    writable: false,
+    description: 'Cursor agent CLI sessions',
+  },
   agy: {
     name: 'Antigravity (Agy)',
     shortName: 'Agy',
     cliName: 'agy',
     color: '#06B6D4', // cyan
     badgeBg: '#164E63',
-    shortcut: '3',
+    shortcut: '4',
     writable: false,
     description: 'Google DeepMind Antigravity CLI',
+  },
+  grok: {
+    name: 'Grok Build',
+    shortName: 'Grok',
+    cliName: 'grok',
+    color: '#E2E8F0', // silver white
+    badgeBg: '#334155',
+    shortcut: '5',
+    writable: false,
+    description: 'xAI Grok build and coding CLI',
+  },
+  deepseek: {
+    name: 'DeepSeek Harness',
+    shortName: 'DeepSeek',
+    cliName: 'deepseek',
+    color: '#6366F1', // indigo
+    badgeBg: '#312E81',
+    shortcut: '6',
+    writable: false,
+    description: 'DeepSeek Coder harness sessions',
+  },
+  hermes: {
+    name: 'Hermes Agent',
+    shortName: 'Hermes',
+    cliName: 'hermes',
+    color: '#EC4899', // pink
+    badgeBg: '#831843',
+    shortcut: '7',
+    writable: false,
+    description: 'Nous Research Hermes agent CLI',
+  },
+  openclaw: {
+    name: 'OpenClaw',
+    shortName: 'OpenClaw',
+    cliName: 'openclaw',
+    color: '#F97316', // orange
+    badgeBg: '#7C2D12',
+    shortcut: '8',
+    writable: false,
+    description: 'OpenClaw autonomous agent sessions',
+  },
+  aider: {
+    name: 'Aider',
+    shortName: 'Aider',
+    cliName: 'aider',
+    color: '#A855F7', // purple
+    badgeBg: '#581C87',
+    shortcut: '9',
+    writable: false,
+    description: 'Aider AI pair programmer CLI',
   },
   oc: {
     name: 'OpenCode',
@@ -54,29 +114,19 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     cliName: 'opencode',
     color: '#D946EF', // fuchsia / magenta
     badgeBg: '#701A75',
-    shortcut: '4',
+    shortcut: '10',
     writable: true,
     description: 'Anomaly OpenCode SQLite database',
   },
-  gemini: {
-    name: 'Gemini CLI',
-    shortName: 'Gemini',
-    cliName: 'gemini',
-    color: '#3B82F6', // royal blue
-    badgeBg: '#1E3A8A',
-    shortcut: '5',
-    writable: true,
-    description: 'Google Gemini CLI sessions',
-  },
-  mmx: {
-    name: 'MiniMax Code',
-    shortName: 'MiniMax',
-    cliName: 'minimax',
-    color: '#F43F5E', // rose / coral
-    badgeBg: '#881337',
-    shortcut: '6',
+  openhands: {
+    name: 'OpenHands',
+    shortName: 'OpenHands',
+    cliName: 'openhands',
+    color: '#0284C7', // light blue
+    badgeBg: '#075985',
+    shortcut: '11',
     writable: false,
-    description: 'MiniMax SQLite session store',
+    description: 'All-Hands OpenHands agent sessions',
   },
   qwen: {
     name: 'Qwen Code',
@@ -84,9 +134,29 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     cliName: 'qwen',
     color: '#EAB308', // gold yellow
     badgeBg: '#713F12',
-    shortcut: '7',
+    shortcut: '12',
     writable: true,
     description: 'Alibaba Qwen Code sessions',
+  },
+  kimi: {
+    name: 'Kimi Code',
+    shortName: 'Kimi',
+    cliName: 'kimi',
+    color: '#8B5CF6', // violet
+    badgeBg: '#4C1D95',
+    shortcut: '13',
+    writable: true,
+    description: 'Moonshot Kimi Code sessions',
+  },
+  mmx: {
+    name: 'MiniMax Code',
+    shortName: 'MiniMax',
+    cliName: 'minimax',
+    color: '#F43F5E', // rose / coral
+    badgeBg: '#881337',
+    shortcut: '14',
+    writable: false,
+    description: 'MiniMax SQLite session store',
   },
   pi: {
     name: 'Pi Agent',
@@ -94,19 +164,9 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     cliName: 'pi',
     color: '#14B8A6', // teal
     badgeBg: '#134E4A',
-    shortcut: '8',
+    shortcut: '15',
     writable: true,
     description: 'Inflection Pi agent entry tree',
-  },
-  kimi: {
-    name: 'Kimi Code',
-    shortName: 'Kimi',
-    cliName: 'kimi',
-    color: '#8B5CF6', // purple / violet
-    badgeBg: '#4C1D95',
-    shortcut: '9',
-    writable: true,
-    description: 'Moonshot Kimi Code sessions',
   },
 };
 
@@ -128,13 +188,19 @@ export function detectAgents(): AgentInfo[] {
   const checks: Record<AgentKey, boolean> = {
     codex: isCommandAvailable('codex') || fs.existsSync(path.join(home, '.codex')),
     cc: isCommandAvailable('claude') || fs.existsSync(path.join(home, '.claude')),
+    cursor: isCommandAvailable('cursor-agent') || isCommandAvailable('cursor') || fs.existsSync(path.join(home, '.cursor')),
     agy: isCommandAvailable('agy') || fs.existsSync(path.join(home, '.gemini', 'antigravity-cli')) || fs.existsSync(path.join(home, 'AppData', 'Local', 'agy')),
+    grok: isCommandAvailable('grok') || isCommandAvailable('grok-build') || fs.existsSync(path.join(home, '.grok')),
+    deepseek: isCommandAvailable('deepseek') || isCommandAvailable('deepseek-harness') || fs.existsSync(path.join(home, '.deepseek')),
+    hermes: isCommandAvailable('hermes') || isCommandAvailable('hermes-agent') || fs.existsSync(path.join(home, '.hermes')),
+    openclaw: isCommandAvailable('openclaw') || isCommandAvailable('claw') || fs.existsSync(path.join(home, '.openclaw')),
+    aider: isCommandAvailable('aider') || fs.existsSync(path.join(home, '.aider')),
     oc: isCommandAvailable('opencode') || fs.existsSync(path.join(home, '.local', 'share', 'opencode')),
-    gemini: isCommandAvailable('gemini') || fs.existsSync(path.join(home, '.gemini')),
-    mmx: isCommandAvailable('minimax') || fs.existsSync(path.join(home, '.minimax')),
+    openhands: isCommandAvailable('openhands') || fs.existsSync(path.join(home, '.openhands')),
     qwen: isCommandAvailable('qwen') || fs.existsSync(path.join(home, '.qwen')),
-    pi: isCommandAvailable('pi') || fs.existsSync(path.join(home, '.pi')),
     kimi: isCommandAvailable('kimi') || fs.existsSync(path.join(home, '.kimi-code')),
+    mmx: isCommandAvailable('minimax') || isCommandAvailable('mcode') || fs.existsSync(path.join(home, '.minimax')),
+    pi: isCommandAvailable('pi') || fs.existsSync(path.join(home, '.pi')),
   };
 
   return (Object.keys(AGENT_REGISTRY) as AgentKey[]).map((key) => {
@@ -172,13 +238,19 @@ function resolveAgentKey(toolOrKey: string): AgentKey {
   const lower = toolOrKey.toLowerCase();
   if (lower === 'codex') return 'codex';
   if (lower === 'cc' || lower === 'claude') return 'cc';
+  if (lower === 'cursor' || lower === 'cursor-cli' || lower === 'cursor-agent') return 'cursor';
   if (lower === 'agy' || lower === 'antigravity') return 'agy';
+  if (lower === 'grok' || lower === 'grok-build' || lower === 'grok-cli') return 'grok';
+  if (lower === 'deepseek' || lower === 'deepseek-harness' || lower === 'deepseek-cli') return 'deepseek';
+  if (lower === 'hermes' || lower === 'harmes' || lower === 'hermes-agent') return 'hermes';
+  if (lower === 'openclaw' || lower === 'claw') return 'openclaw';
+  if (lower === 'aider' || lower === 'aider-chat') return 'aider';
   if (lower === 'oc' || lower === 'opencode') return 'oc';
-  if (lower === 'gemini') return 'gemini';
-  if (lower === 'mmx' || lower === 'minimax') return 'mmx';
-  if (lower === 'qwen') return 'qwen';
+  if (lower === 'openhands' || lower === 'all-hands' || lower === 'opendevin') return 'openhands';
+  if (lower === 'qwen' || lower === 'qwen-code') return 'qwen';
+  if (lower === 'kimi' || lower === 'kimi-code') return 'kimi';
+  if (lower === 'mmx' || lower === 'minimax' || lower === 'mcode') return 'mmx';
   if (lower === 'pi') return 'pi';
-  if (lower === 'kimi') return 'kimi';
   return 'agy';
 }
 
@@ -239,7 +311,13 @@ export function loadAllThreads(): ThreadItem[] {
           let resumeCmd = `${meta?.cliName || tool} resume ${sid}`;
           if (agentKey === 'cc') resumeCmd = `claude --resume ${sid}`;
           if (agentKey === 'agy') resumeCmd = `agy --conversation ${sid}`;
-          if (agentKey === 'gemini') resumeCmd = `gemini --resume ${sid}`;
+          if (agentKey === 'cursor') resumeCmd = `cursor-agent resume ${sid}`;
+          if (agentKey === 'grok') resumeCmd = `grok --resume ${sid}`;
+          if (agentKey === 'deepseek') resumeCmd = `deepseek --resume ${sid}`;
+          if (agentKey === 'hermes') resumeCmd = `hermes resume ${sid}`;
+          if (agentKey === 'openclaw') resumeCmd = `openclaw --resume ${sid}`;
+          if (agentKey === 'aider') resumeCmd = `aider --restore-chat-history`;
+          if (agentKey === 'openhands') resumeCmd = `openhands --resume ${sid}`;
 
           copies[agentKey] = {
             tool,

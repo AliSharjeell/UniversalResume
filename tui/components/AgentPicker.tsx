@@ -23,7 +23,7 @@ export function AgentPicker({
         {`Directory: ${thread.cwd}`}
       </text>
       <text bold color="#FFFFFF" marginBottom={1}>
-        Select agent to resume with (press 1-9 or Enter):
+        Select agent to resume with (press 1-9, ↑/↓, or Enter):
       </text>
 
       <box flexDirection="column" marginBottom={1}>
@@ -39,7 +39,7 @@ export function AgentPicker({
           const recentTag = isRecent ? ' (recent agent)' : '';
 
           const prefix = isSelected ? '> ' : '  ';
-          const num = `${agent.shortcut}. `;
+          const num = `${agent.shortcut}.`.padEnd(4);
           const name = agent.name.padEnd(24);
           const modeStr = mode.padEnd(20);
           const line = `${prefix}${num}${name}${modeStr}${recentTag}`;

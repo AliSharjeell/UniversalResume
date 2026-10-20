@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "samethread"
 dynamic = ["version"]
-description = "Hop between coding agents, stay on the same thread: one chat history across Claude Code, OpenCode, Codex, Gemini CLI, Qwen Code, Pi, Kimi Code, Antigravity and MiniMax Code."
+description = "Hop between coding agents, stay on the same thread: one chat history across Claude Code, Codex, Cursor CLI, Antigravity, Grok Build, DeepSeek Harness, Hermes Agent, OpenClaw, Aider, OpenCode, OpenHands, Qwen Code, Kimi Code, and MiniMax Code."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "GodrezJr2" }]
-keywords = ["claude-code", "opencode", "codex", "gemini-cli", "qwen-code", "pi", "kimi", "antigravity", "minimax", "ai-agents", "coding-agents", "session", "resume", "cli"]
+keywords = ["claude-code", "codex", "cursor", "antigravity", "grok", "deepseek", "hermes", "openclaw", "aider", "opencode", "openhands", "qwen-code", "pi", "kimi", "minimax", "ai-agents", "coding-agents", "session", "resume", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",

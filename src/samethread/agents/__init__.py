@@ -1,15 +1,37 @@
 """Registry of supported agents, in the order they appear in tags and listings."""
+from .aider import Aider
 from .antigravity import Antigravity
 from .claude import Claude
 from .codex import Codex
-from .gemini import Gemini
+from .cursor import Cursor
+from .deepseek import DeepSeek
+from .grok import Grok
+from .hermes import Hermes
 from .kimi import Kimi
 from .minimax import MiniMax
+from .openclaw import OpenClaw
 from .opencode import OpenCode
+from .openhands import OpenHands
 from .pi import Pi
 from .qwen import Qwen
 
-AGENTS = {a.key: a for a in (Claude(), OpenCode(), Antigravity(), Codex(), Gemini(), Qwen(), Pi(), Kimi(), MiniMax())}
+AGENTS = {a.key: a for a in (
+    Claude(),
+    Codex(),
+    Cursor(),
+    Antigravity(),
+    Grok(),
+    DeepSeek(),
+    Hermes(),
+    OpenClaw(),
+    Aider(),
+    OpenCode(),
+    OpenHands(),
+    Qwen(),
+    Kimi(),
+    MiniMax(),
+    Pi(),
+)}
 NAMES = {k: a.name for k, a in AGENTS.items()}
 
 

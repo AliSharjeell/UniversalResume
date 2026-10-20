@@ -237,7 +237,7 @@ def main():
                           ('forget', cmd_forget, "delete a chat's mirrors and stop mirroring it")):
         p = sub.add_parser(name, help=hlp)
         if name == 'resume':
-            p.add_argument('agent', help='cc, oc, agy, codex, gemini, qwen, pi, kimi, mmx (or the full name)')
+            p.add_argument('agent', help=f'{", ".join(AGENTS)} (or the full name)')
         if name == 'agy':
             p.set_defaults(agent='agy')
         if name != 'list':

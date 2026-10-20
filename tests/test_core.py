@@ -43,7 +43,13 @@ class Helpers(unittest.TestCase):
     def test_agent_names_resolve(self):
         self.assertEqual(resolve('claude'), 'cc')
         self.assertEqual(resolve('MiniMax'), 'mmx')
-        self.assertEqual(len(NAMES), 9)
+        self.assertEqual(resolve('cursor'), 'cursor')
+        self.assertEqual(resolve('grok'), 'grok')
+        self.assertEqual(resolve('deepseek'), 'deepseek')
+        self.assertEqual(resolve('harmes'), 'hermes')
+        self.assertEqual(resolve('openclaw'), 'openclaw')
+        self.assertEqual(resolve('aider'), 'aider')
+        self.assertEqual(len(NAMES), 15)
 
 
 class Render(unittest.TestCase):
@@ -114,16 +120,6 @@ class RoundTrip(unittest.TestCase):
         os.makedirs(os.path.join(TMP, '.kimi-code'), exist_ok=True)
         self.roundtrip('kimi', os.getcwd())
 
-    def test_gemini_needs_a_registered_folder(self):
-        cwd = os.getcwd()
-        with self.assertRaises(core.HopError):
-            AGENTS['gemini'].write(None, cwd, sync.render(thread([e('1', 'user', 'x'), e('2', 'assistant', 'y')]), CFG),
-                                   't', {'cfg': CFG})
-        reg = os.path.join(TMP, '.gemini', 'projects.json')
-        os.makedirs(os.path.dirname(reg), exist_ok=True)
-        with open(reg, 'w') as f:
-            json.dump({'projects': {os.path.normpath(cwd).lower() if os.name == 'nt' else cwd: 'proj'}}, f)
-        self.roundtrip('gemini', cwd)
 
     def test_claude_detects_a_continued_mirror(self):
         agent, res = self.roundtrip('cc', os.getcwd())

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 600" width="1280" height="600" role="img" aria-labelledby="t d">
   <title id="t">SameThread</title>
-  <desc id="d">One chat thread running through Claude Code, Codex, Kimi Code, OpenCode, Gemini CLI, Antigravity, Qwen Code, Pi and MiniMax Code.</desc>
+  <desc id="d">One chat thread running through Claude Code, Codex, Cursor CLI, Antigravity, Grok Build, DeepSeek, Hermes, OpenCode, Kimi, MiniMax, Qwen Code, and Aider.</desc>
   <defs>
     <style>
       .sans { font-family: system-ui, -apple-system, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif; }
@@ -15,7 +15,7 @@
     <radialGradient id="g1" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#E8845C" stop-opacity=".18"/><stop offset="1" stop-color="#E8845C" stop-opacity="0"/></radialGradient>
     <radialGradient id="g2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#5EEAD4" stop-opacity=".10"/><stop offset="1" stop-color="#5EEAD4" stop-opacity="0"/></radialGradient>
     <radialGradient id="g3" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#A78BFA" stop-opacity=".18"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></radialGradient>
-    <linearGradient id="thread" x1="30" y1="0" x2="1250" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0.000" stop-color="#E8845C"/><stop offset="0.125" stop-color="#F5C451"/><stop offset="0.250" stop-color="#34D399"/><stop offset="0.375" stop-color="#5EEAD4"/><stop offset="0.500" stop-color="#60A5FA"/><stop offset="0.625" stop-color="#8AA4FF"/><stop offset="0.750" stop-color="#A78BFA"/><stop offset="0.875" stop-color="#F472B6"/><stop offset="1.000" stop-color="#FB7185"/></linearGradient>
+    <linearGradient id="thread" x1="30" y1="0" x2="1250" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0.000" stop-color="#E8845C"/><stop offset="0.091" stop-color="#F5C451"/><stop offset="0.182" stop-color="#38BDF8"/><stop offset="0.273" stop-color="#8AA4FF"/><stop offset="0.364" stop-color="#E2E8F0"/><stop offset="0.455" stop-color="#6366F1"/><stop offset="0.545" stop-color="#EC4899"/><stop offset="0.636" stop-color="#5EEAD4"/><stop offset="0.727" stop-color="#34D399"/><stop offset="0.818" stop-color="#FB7185"/><stop offset="0.909" stop-color="#A78BFA"/><stop offset="1.000" stop-color="#A855F7"/></linearGradient>
     <linearGradient id="word" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F0A07F"/><stop offset=".5" stop-color="#7EF0DE"/><stop offset="1" stop-color="#C4B5FD"/></linearGradient>
     <filter id="blur" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
     <filter id="dotglow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -35,9 +35,9 @@
   <text x="80" y="226" class="sans" font-size="56" font-weight="700" fill="#F4F5F7" letter-spacing="-1">Stay on the <tspan fill="url(#word)">same thread</tspan>.</text>
   <text x="80" y="276" class="sans" font-size="20" fill="#A3ABBC">One chat history across nine coding agents, right inside each agent's own /resume.</text>
 
-  <path d="M30.0 428.0 C43.3 425.0 74.6 409.0 110.0 410.0 C145.4 411.0 198.3 430.5 242.5 433.7 C286.7 437.0 330.8 434.7 375.0 429.4 C419.2 424.1 463.3 409.6 507.5 402.1 C551.7 394.6 595.8 385.1 640.0 384.2 C684.2 383.3 728.3 390.0 772.5 396.8 C816.7 403.6 860.8 418.6 905.0 425.0 C949.2 431.5 993.3 437.0 1037.5 435.5 C1081.7 434.0 1134.6 421.1 1170.0 415.8 C1205.4 410.5 1236.7 405.8 1250.0 403.8" fill="none" stroke="url(#thread)" stroke-width="10" stroke-opacity=".35" filter="url(#blur)"/>
-  <path id="line" d="M30.0 428.0 C43.3 425.0 74.6 409.0 110.0 410.0 C145.4 411.0 198.3 430.5 242.5 433.7 C286.7 437.0 330.8 434.7 375.0 429.4 C419.2 424.1 463.3 409.6 507.5 402.1 C551.7 394.6 595.8 385.1 640.0 384.2 C684.2 383.3 728.3 390.0 772.5 396.8 C816.7 403.6 860.8 418.6 905.0 425.0 C949.2 431.5 993.3 437.0 1037.5 435.5 C1081.7 434.0 1134.6 421.1 1170.0 415.8 C1205.4 410.5 1236.7 405.8 1250.0 403.8" fill="none" stroke="url(#thread)" stroke-width="2.5" stroke-linecap="round"/>
-  <path class="flow" d="M30.0 428.0 C43.3 425.0 74.6 409.0 110.0 410.0 C145.4 411.0 198.3 430.5 242.5 433.7 C286.7 437.0 330.8 434.7 375.0 429.4 C419.2 424.1 463.3 409.6 507.5 402.1 C551.7 394.6 595.8 385.1 640.0 384.2 C684.2 383.3 728.3 390.0 772.5 396.8 C816.7 403.6 860.8 418.6 905.0 425.0 C949.2 431.5 993.3 437.0 1037.5 435.5 C1081.7 434.0 1134.6 421.1 1170.0 415.8 C1205.4 410.5 1236.7 405.8 1250.0 403.8" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M30.0 428.0 C43.3 425.0 80.6 409.0 110.0 410.0 C139.4 411.0 174.2 430.5 206.4 433.7 C238.5 437.0 270.6 434.7 302.7 429.4 C334.8 424.1 367.0 409.6 399.1 402.1 C431.2 394.6 463.3 385.1 495.5 384.2 C527.6 383.3 559.7 390.0 591.8 396.8 C623.9 403.6 656.1 418.6 688.2 425.0 C720.3 431.5 752.4 437.0 784.5 435.5 C816.7 434.0 848.8 423.5 880.9 415.8 C913.0 408.1 945.2 394.0 977.3 389.2 C1009.4 384.5 1041.5 383.4 1073.6 387.2 C1105.8 391.1 1140.6 410.0 1170.0 412.2 C1199.4 414.3 1236.7 402.2 1250.0 400.2" fill="none" stroke="url(#thread)" stroke-width="10" stroke-opacity=".35" filter="url(#blur)"/>
+  <path id="line" d="M30.0 428.0 C43.3 425.0 80.6 409.0 110.0 410.0 C139.4 411.0 174.2 430.5 206.4 433.7 C238.5 437.0 270.6 434.7 302.7 429.4 C334.8 424.1 367.0 409.6 399.1 402.1 C431.2 394.6 463.3 385.1 495.5 384.2 C527.6 383.3 559.7 390.0 591.8 396.8 C623.9 403.6 656.1 418.6 688.2 425.0 C720.3 431.5 752.4 437.0 784.5 435.5 C816.7 434.0 848.8 423.5 880.9 415.8 C913.0 408.1 945.2 394.0 977.3 389.2 C1009.4 384.5 1041.5 383.4 1073.6 387.2 C1105.8 391.1 1140.6 410.0 1170.0 412.2 C1199.4 414.3 1236.7 402.2 1250.0 400.2" fill="none" stroke="url(#thread)" stroke-width="2.5" stroke-linecap="round"/>
+  <path class="flow" d="M30.0 428.0 C43.3 425.0 80.6 409.0 110.0 410.0 C139.4 411.0 174.2 430.5 206.4 433.7 C238.5 437.0 270.6 434.7 302.7 429.4 C334.8 424.1 367.0 409.6 399.1 402.1 C431.2 394.6 463.3 385.1 495.5 384.2 C527.6 383.3 559.7 390.0 591.8 396.8 C623.9 403.6 656.1 418.6 688.2 425.0 C720.3 431.5 752.4 437.0 784.5 435.5 C816.7 434.0 848.8 423.5 880.9 415.8 C913.0 408.1 945.2 394.0 977.3 389.2 C1009.4 384.5 1041.5 383.4 1073.6 387.2 C1105.8 391.1 1140.6 410.0 1170.0 412.2 C1199.4 414.3 1236.7 402.2 1250.0 400.2" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="2.5" stroke-linecap="round"/>
   <circle r="5" fill="#ffffff" filter="url(#dotglow)">
     <animateMotion dur="10s" repeatCount="indefinite" keyPoints="0;1;0" keyTimes="0;.5;1" calcMode="linear"><mpath href="#line"/></animateMotion>
   </circle>
@@ -47,45 +47,60 @@
     <text x="110.0" y="415.0" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#E8845C">CC</text>
     <text x="110.0" y="466.0" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Claude Code</text>
     <text x="110.0" y="484.0" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:0.36s" cx="242.5" cy="433.7" r="36" fill="#F5C451"/>
-    <circle cx="242.5" cy="433.7" r="24" fill="#0F1117" stroke="#F5C451" stroke-width="2"/>
-    <text x="242.5" y="438.7" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#F5C451">CX</text>
-    <text x="242.5" y="489.7" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Codex</text>
-    <text x="242.5" y="507.7" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:0.72s" cx="375.0" cy="429.4" r="36" fill="#34D399"/>
-    <circle cx="375.0" cy="429.4" r="24" fill="#0F1117" stroke="#34D399" stroke-width="2"/>
-    <text x="375.0" y="434.4" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#34D399">KM</text>
-    <text x="375.0" y="485.4" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Kimi Code</text>
-    <text x="375.0" y="503.4" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:1.08s" cx="507.5" cy="402.1" r="36" fill="#5EEAD4"/>
-    <circle cx="507.5" cy="402.1" r="24" fill="#0F1117" stroke="#5EEAD4" stroke-width="2"/>
-    <text x="507.5" y="407.1" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#5EEAD4">OC</text>
-    <text x="507.5" y="458.1" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">OpenCode</text>
-    <text x="507.5" y="476.1" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:1.44s" cx="640.0" cy="384.2" r="36" fill="#60A5FA"/>
-    <circle cx="640.0" cy="384.2" r="24" fill="#0F1117" stroke="#60A5FA" stroke-width="2"/>
-    <text x="640.0" y="389.2" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#60A5FA">GM</text>
-    <text x="640.0" y="440.2" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Gemini CLI</text>
-    <text x="640.0" y="458.2" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:1.80s" cx="772.5" cy="396.8" r="36" fill="#8AA4FF"/>
-    <circle cx="772.5" cy="396.8" r="24" fill="#0F1117" stroke="#8AA4FF" stroke-width="2" stroke-dasharray="3 3"/>
-    <text x="772.5" y="401.8" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#8AA4FF">AG</text>
-    <text x="772.5" y="452.8" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Antigravity</text>
-    <text x="772.5" y="470.8" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
-    <circle class="halo" style="animation-delay:2.16s" cx="905.0" cy="425.0" r="36" fill="#A78BFA"/>
-    <circle cx="905.0" cy="425.0" r="24" fill="#0F1117" stroke="#A78BFA" stroke-width="2"/>
-    <text x="905.0" y="430.0" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#A78BFA">QW</text>
-    <text x="905.0" y="481.0" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Qwen Code</text>
-    <text x="905.0" y="499.0" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:2.52s" cx="1037.5" cy="435.5" r="36" fill="#F472B6"/>
-    <circle cx="1037.5" cy="435.5" r="24" fill="#0F1117" stroke="#F472B6" stroke-width="2"/>
-    <text x="1037.5" y="440.5" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#F472B6">PI</text>
-    <text x="1037.5" y="491.5" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Pi</text>
-    <text x="1037.5" y="509.5" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
-    <circle class="halo" style="animation-delay:2.88s" cx="1170.0" cy="415.8" r="36" fill="#FB7185"/>
-    <circle cx="1170.0" cy="415.8" r="24" fill="#0F1117" stroke="#FB7185" stroke-width="2" stroke-dasharray="3 3"/>
-    <text x="1170.0" y="420.8" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#FB7185">MM</text>
-    <text x="1170.0" y="471.8" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">MiniMax Code</text>
-    <text x="1170.0" y="489.8" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:0.36s" cx="206.4" cy="433.7" r="36" fill="#F5C451"/>
+    <circle cx="206.4" cy="433.7" r="24" fill="#0F1117" stroke="#F5C451" stroke-width="2"/>
+    <text x="206.4" y="438.7" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#F5C451">CX</text>
+    <text x="206.4" y="489.7" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Codex</text>
+    <text x="206.4" y="507.7" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
+    <circle class="halo" style="animation-delay:0.72s" cx="302.7" cy="429.4" r="36" fill="#38BDF8"/>
+    <circle cx="302.7" cy="429.4" r="24" fill="#0F1117" stroke="#38BDF8" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="302.7" y="434.4" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#38BDF8">CR</text>
+    <text x="302.7" y="485.4" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Cursor CLI</text>
+    <text x="302.7" y="503.4" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:1.08s" cx="399.1" cy="402.1" r="36" fill="#8AA4FF"/>
+    <circle cx="399.1" cy="402.1" r="24" fill="#0F1117" stroke="#8AA4FF" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="399.1" y="407.1" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#8AA4FF">AG</text>
+    <text x="399.1" y="458.1" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Antigravity</text>
+    <text x="399.1" y="476.1" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:1.44s" cx="495.5" cy="384.2" r="36" fill="#E2E8F0"/>
+    <circle cx="495.5" cy="384.2" r="24" fill="#0F1117" stroke="#E2E8F0" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="495.5" y="389.2" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#E2E8F0">GK</text>
+    <text x="495.5" y="440.2" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Grok Build</text>
+    <text x="495.5" y="458.2" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:1.80s" cx="591.8" cy="396.8" r="36" fill="#6366F1"/>
+    <circle cx="591.8" cy="396.8" r="24" fill="#0F1117" stroke="#6366F1" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="591.8" y="401.8" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#6366F1">DS</text>
+    <text x="591.8" y="452.8" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">DeepSeek</text>
+    <text x="591.8" y="470.8" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:2.16s" cx="688.2" cy="425.0" r="36" fill="#EC4899"/>
+    <circle cx="688.2" cy="425.0" r="24" fill="#0F1117" stroke="#EC4899" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="688.2" y="430.0" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#EC4899">HM</text>
+    <text x="688.2" y="481.0" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Hermes</text>
+    <text x="688.2" y="499.0" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:2.52s" cx="784.5" cy="435.5" r="36" fill="#5EEAD4"/>
+    <circle cx="784.5" cy="435.5" r="24" fill="#0F1117" stroke="#5EEAD4" stroke-width="2"/>
+    <text x="784.5" y="440.5" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#5EEAD4">OC</text>
+    <text x="784.5" y="491.5" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">OpenCode</text>
+    <text x="784.5" y="509.5" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
+    <circle class="halo" style="animation-delay:2.88s" cx="880.9" cy="415.8" r="36" fill="#34D399"/>
+    <circle cx="880.9" cy="415.8" r="24" fill="#0F1117" stroke="#34D399" stroke-width="2"/>
+    <text x="880.9" y="420.8" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#34D399">KM</text>
+    <text x="880.9" y="471.8" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Kimi Code</text>
+    <text x="880.9" y="489.8" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
+    <circle class="halo" style="animation-delay:3.24s" cx="977.3" cy="389.2" r="36" fill="#FB7185"/>
+    <circle cx="977.3" cy="389.2" r="24" fill="#0F1117" stroke="#FB7185" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="977.3" y="394.2" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#FB7185">MM</text>
+    <text x="977.3" y="445.2" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">MiniMax Code</text>
+    <text x="977.3" y="463.2" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
+    <circle class="halo" style="animation-delay:3.60s" cx="1073.6" cy="387.2" r="36" fill="#A78BFA"/>
+    <circle cx="1073.6" cy="387.2" r="24" fill="#0F1117" stroke="#A78BFA" stroke-width="2"/>
+    <text x="1073.6" y="392.2" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#A78BFA">QW</text>
+    <text x="1073.6" y="443.2" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Qwen Code</text>
+    <text x="1073.6" y="461.2" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">native</text>
+    <circle class="halo" style="animation-delay:3.96s" cx="1170.0" cy="412.2" r="36" fill="#A855F7"/>
+    <circle cx="1170.0" cy="412.2" r="24" fill="#0F1117" stroke="#A855F7" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="1170.0" y="417.2" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#A855F7">AD</text>
+    <text x="1170.0" y="468.2" text-anchor="middle" class="sans" font-size="15" font-weight="600" fill="#E6E8EE">Aider</text>
+    <text x="1170.0" y="486.2" text-anchor="middle" class="sans" font-size="11.5" fill="#7D8596">read + handoff</text>
   </g>
 </svg>

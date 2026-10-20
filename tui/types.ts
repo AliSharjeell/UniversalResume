@@ -1,13 +1,19 @@
 export type AgentKey =
   | 'codex'
   | 'cc'
+  | 'cursor'
   | 'agy'
+  | 'grok'
+  | 'deepseek'
+  | 'hermes'
+  | 'openclaw'
+  | 'aider'
   | 'oc'
-  | 'gemini'
+  | 'openhands'
   | 'qwen'
-  | 'pi'
   | 'kimi'
-  | 'mmx';
+  | 'mmx'
+  | 'pi';
 
 export interface AgentInfo {
   key: AgentKey;
