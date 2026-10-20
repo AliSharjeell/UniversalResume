@@ -8,6 +8,22 @@ Type <code>resume</code> in any terminal. See all your coding conversations acro
 Built with <a href="https://github.com/anomalyco/opentui">OpenTUI</a>.
 </p>
 
+<p align="center">
+  <img src="assets/1-hit-usage-limit.png" alt="Hit agent usage limit" width="100%" />
+</p>
+
+<p align="center">
+  <img src="assets/2-universal-resume-tui.png" alt="Universal Resume TUI" width="100%" />
+</p>
+
+<p align="center">
+  <img src="assets/3-pick-agent.png" alt="Choose agent to resume with" width="100%" />
+</p>
+
+<p align="center">
+  <img src="assets/4-resumed-conversation.png" alt="Continue coding in another agent" width="100%" />
+</p>
+
 ---
 
 ## Quick Install (One-Liner)
