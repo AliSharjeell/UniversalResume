@@ -6,17 +6,19 @@
   <a href="#quick-start"><img src="https://img.shields.io/badge/setup-3_commands-5EEAD4?style=for-the-badge" alt="Setup: 3 commands"></a>
   <a href="#supported-agents"><img src="https://img.shields.io/badge/agents-9-8AA4FF?style=for-the-badge" alt="9 agents"></a>
   <a href="#how-it-works"><img src="https://img.shields.io/badge/resume-native,_not_a_summary-E8845C?style=for-the-badge" alt="Native resume"></a>
+  <a href="#interactive-opentui-session-picker-resume"><img src="https://img.shields.io/badge/UI-OpenTUI-FF4088?style=for-the-badge" alt="OpenTUI"></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
-  <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="Zero dependencies">
-  <a href="https://github.com/GodrezJr2/samethread/actions/workflows/ci.yml"><img src="https://github.com/GodrezJr2/samethread/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/bun-1.1%2B-FBF0DF?logo=bun&logoColor=black" alt="Bun 1.1+">
+  <img src="https://img.shields.io/badge/dependencies-0-brightgreen" alt="Zero Python dependencies">
+  <a href="https://github.com/AliSharjeell/UniversalResume/actions"><img src="https://img.shields.io/badge/platform-windows_|_macos_|_linux-lightgrey" alt="Platform"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT"></a>
 </p>
 
 <p align="center">
-  <b>Plan it in Claude Code. Grind it out in Codex or Qwen. Finish it in Kimi.</b><br>
+  <b>Plan it in Claude Code. Grind it out in Codex or Qwen. Finish it in Antigravity or Kimi.</b><br>
   SameThread puts every conversation into every agent's own <code>/resume</code> list, full history included.
 </p>
 
@@ -51,37 +53,108 @@ None of them can see the others. So you re-explain the task, paste logs again, a
 - **Tagged.** `Auth refactor (Agy)` came from Antigravity. `Auth refactor (Agy+Codex)` went through both. Your own chats stay untagged.
 - **Round-trips.** Continue a mirrored chat anywhere; the next sync carries the new turns to every other agent.
 - **Safe.** Originals are never modified. SameThread only rewrites the mirrors it created. `hop forget`, `hop clean` and `hop uninstall` undo everything.
-- **Tiny.** One Python package, standard library only.
+- **Universal OpenTUI Terminal Picker:** Type `resume` anywhere to open a fast, beautiful TUI built with [OpenTUI](https://github.com/anomalyco/opentui).
 
-## Quick start
+---
 
-```bash
-pipx install git+https://github.com/GodrezJr2/samethread   # or: pip install git+https://github.com/GodrezJr2/samethread
-hop install                                                # hooks for every agent it finds
-hop sync                                                   # mirror existing chats once
-resume                                                     # launch the OpenTUI interactive session picker anywhere
+## Installation & Setup
+
+### Prerequisites
+- **Python**: 3.9 or newer (`python --version`)
+- **Runtime**: [Bun](https://bun.sh) (recommended) or Node.js 20+
+
+### Windows
+
+```powershell
+# 1. Install Bun (if not already installed)
+powershell -c "irm bun.sh/install.ps1 | iex"
+
+# 2. Clone repository
+git clone https://github.com/AliSharjeell/UniversalResume.git
+cd UniversalResume
+
+# 3. Install dependencies and register global resume CLI
+bun install
+npm link
+pip install -e .
+
+# 4. Wire auto-sync hooks and initial sync
+hop install
+hop sync
+
+# 5. Launch anywhere in terminal!
+resume
 ```
 
-That's it. Keep working the way you do, and use each agent's own resume. `hop agents` shows what was found; `hop list` shows every copy of a chat with the command to open it.
+### macOS
 
-### Interactive OpenTUI Session Picker (`resume`)
+```bash
+# 1. Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
 
-Built with [OpenTUI](https://github.com/anomalyco/opentui), run `resume` anywhere in your terminal to open the interactive TUI:
+# 2. Clone repository
+git clone https://github.com/AliSharjeell/UniversalResume.git
+cd UniversalResume
 
-- **Browse & Filter:** Displays all past and recent conversations, which coding agent was recently working on them, and relative time. Type to filter instantly.
-- **Folder Scopes:** Press `Tab` to toggle between the current directory and all projects across your machine.
-- **Transcript Preview:** Inspect the original goal, turn counts, and participant agents in the detail panel.
-- **Seamless Hop:** Press `Enter` on any conversation, choose which agent you want to resume with (`Codex`, `Claude Code`, `Antigravity`, `OpenCode`, `Gemini`, etc.), and jump straight into the session.
+# 3. Install dependencies and register global resume CLI
+bun install
+npm link
+pip install -e .
+
+# 4. Wire auto-sync hooks and initial sync
+hop install
+hop sync
+
+# 5. Launch anywhere in terminal!
+resume
+```
+
+### Linux
+
+```bash
+# 1. Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# 2. Clone repository
+git clone https://github.com/AliSharjeell/UniversalResume.git
+cd UniversalResume
+
+# 3. Install dependencies and register global resume CLI
+bun install
+npm link
+pip install -e .
+
+# 4. Wire auto-sync hooks and initial sync
+hop install
+hop sync
+
+# 5. Launch anywhere in terminal!
+resume
+```
+
+---
+
+## Interactive OpenTUI Session Picker (`resume`)
+
+Built with [OpenTUI](https://github.com/anomalyco/opentui), run `resume` anywhere in your terminal:
+
+- ⚡ **Auto-Sync on Startup:** Every time you write `resume` in your terminal, SameThread automatically scans all installed agents and syncs recent turns in the background before rendering.
+- ⟳ **Manual Sync Button & Hotkey:** Hit the interactive `[⟳ Sync (S)]` button in the header or press `s` / `Ctrl+S` anytime inside the TUI to manually refresh all active sessions.
+- 🎯 **Browse & Filter:** Displays all past and recent conversations, which coding agent was recently working on them, and relative time. Type to filter instantly.
+- 📁 **Folder Scope Toggle (`Tab`):** Press `Tab` to toggle between the current directory and all projects across your machine.
+- 📖 **Transcript Preview:** Inspect the original goal, turn counts, and participant agents in the detail panel.
+- 🚀 **Hop Into Any Agent:** Press `Enter` on any conversation, choose which agent you want to resume with (`Codex`, `Claude Code`, `Antigravity`, `OpenCode`, `Gemini`, `MiniMax`, `Qwen`, `Pi`, `Kimi`), and jump straight into the session.
 
 | Key | Action |
 |---|---|
 | `↑` / `↓` | Navigate conversation list |
-| `Enter` | Choose coding agent to resume with |
-| `1` - `9` | Instant agent pick in resume dialog |
+| `Enter` | Select chat & open Resume dialog |
+| `1` - `9` | Quick-pick agent to launch immediately |
 | `Tab` | Toggle between current folder & all projects |
 | Type text | Live fuzzy / substring filter |
-| `Backspace` | Erase search character |
-| `s` | Run quick sync |
+| `Backspace` | Erase search character / Back |
+| `s` or `Ctrl+S` | Trigger manual session sync |
+| `[⟳ Sync]` | Click with mouse to sync |
 | `Esc` | Clear search / Back / Exit |
 
 ## Supported agents
