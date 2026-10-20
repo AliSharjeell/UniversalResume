@@ -60,4 +60,4 @@ export interface ThreadItem {
   participants: string[];
 }
 
-export type ViewMode = 'intro' | 'list' | 'agent-picker';
+export type ViewMode = 'list' | 'agent-picker';
