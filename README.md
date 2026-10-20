@@ -1,12 +1,16 @@
-# ⚡ Universal Resume
+<h1 align="center">Universal Resume</h1>
 
-> Type `resume` in any terminal. See all your coding conversations across agents. Pick any chat, choose which agent you want to resume it with, and keep coding without missing a beat—even when an agent hits its usage limit.
+<p align="center">
+Type <code>resume</code> in any terminal. See all your coding conversations across agents. Pick any chat, choose which agent you want to resume it with, and keep coding without missing a beat—even when an agent hits its usage limit.
+</p>
 
-Built with [OpenTUI](https://github.com/anomalyco/opentui).
+<p align="center">
+Built with <a href="https://github.com/anomalyco/opentui">OpenTUI</a>.
+</p>
 
 ---
 
-## 🚀 Quick Install (One-Liner)
+## Quick Install (One-Liner)
 
 ### Windows (PowerShell)
 ```powershell
@@ -25,7 +29,7 @@ resume
 
 ---
 
-## 💡 Why Universal Resume?
+## Why Universal Resume?
 
 - **Hit rate limits on Claude?** Instantly switch to **Codex**, **OpenCode**, or **Antigravity**.
 - **Started in Codex?** Hop into **Claude Code** or **Gemini CLI** with full history and context preserved.
@@ -34,7 +38,7 @@ resume
 
 ---
 
-## 🤖 Supported Agents
+## Supported Agents
 
 | Coding Agent | CLI Command | Resume Mode |
 |---|---|---|
@@ -50,13 +54,13 @@ resume
 
 ---
 
-## ⌨️ TUI Features & Keybindings
+## TUI Features & Keybindings
 
-- **⚡ Auto-Sync on Start:** Every time you open `resume`, it automatically pulls fresh turns from all installed coding agents in the background.
-- **⟳ Manual Sync Button:** Click `[⟳ Sync (S)]` or press `s` / `Ctrl+S` anytime to re-sync active sessions on the fly.
-- **🔎 Instant Search:** Start typing anywhere to filter chats by title, recent agent, or project folder.
-- **📁 Scope Toggle (`Tab`):** Press `Tab` to switch between chats for the current folder and all projects across your machine.
-- **📖 Live Inspector:** Inspect participant agents, turn metrics, active mirror statuses, and transcript snippets before launching.
+- **Auto-Sync on Start:** Every time you open `resume`, it automatically pulls fresh turns from all installed coding agents in the background.
+- **Manual Sync Button:** Click `[Sync (S)]` or press `s` / `Ctrl+S` anytime to re-sync active sessions on the fly.
+- **Instant Search:** Start typing anywhere to filter chats by title, recent agent, or project folder.
+- **Scope Toggle (Tab):** Press `Tab` to switch between chats for the current folder and all projects across your machine.
+- **Live Inspector:** Inspect participant agents, turn metrics, active mirror statuses, and transcript snippets before launching.
 
 | Key | Action |
 |---|---|
@@ -65,7 +69,7 @@ resume
 | `1`–`9` | Quick-launch agent immediately |
 | `Tab` | Toggle between Current Folder & All Projects |
 | `s` or `Ctrl+S` | Trigger manual session sync |
-| `[⟳ Sync]` | Click with mouse to sync |
+| `[Sync]` | Click with mouse to sync |
 | Type text | Live fuzzy / substring filter |
 | `Backspace` | Erase search character / Back |
 | `Esc` | Clear search / Back / Exit |
