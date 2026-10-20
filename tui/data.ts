@@ -1,0 +1,337 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { execSync } from 'node:child_process';
+import type { AgentInfo, AgentKey, ThreadCopy, ThreadItem } from './types.ts';
+
+export const HOP_DIR = process.env.HOP_HOME || path.join(os.homedir(), '.hop');
+export const THREADS_DIR = path.join(HOP_DIR, 'threads');
+export const INDEX_FILE = path.join(HOP_DIR, 'index.json');
+
+export const AGENT_REGISTRY: Record<AgentKey, {
+  name: string;
+  shortName: string;
+  cliName: string;
+  color: string;
+  badgeBg: string;
+  shortcut: string;
+  writable: boolean;
+  description: string;
+}> = {
+  codex: {
+    name: 'Codex CLI',
+    shortName: 'Codex',
+    cliName: 'codex',
+    color: '#10B981', // emerald green
+    badgeBg: '#064E3B',
+    shortcut: '1',
+    writable: true,
+    description: 'OpenAI rollout session store',
+  },
+  cc: {
+    name: 'Claude Code',
+    shortName: 'Claude',
+    cliName: 'claude',
+    color: '#F59E0B', // amber
+    badgeBg: '#78350F',
+    shortcut: '2',
+    writable: true,
+    description: 'Anthropic JSONL session store',
+  },
+  agy: {
+    name: 'Antigravity (Agy)',
+    shortName: 'Agy',
+    cliName: 'agy',
+    color: '#06B6D4', // cyan
+    badgeBg: '#164E63',
+    shortcut: '3',
+    writable: false,
+    description: 'Google DeepMind Antigravity CLI',
+  },
+  oc: {
+    name: 'OpenCode',
+    shortName: 'OpenCode',
+    cliName: 'opencode',
+    color: '#D946EF', // fuchsia / magenta
+    badgeBg: '#701A75',
+    shortcut: '4',
+    writable: true,
+    description: 'Anomaly OpenCode SQLite database',
+  },
+  gemini: {
+    name: 'Gemini CLI',
+    shortName: 'Gemini',
+    cliName: 'gemini',
+    color: '#3B82F6', // royal blue
+    badgeBg: '#1E3A8A',
+    shortcut: '5',
+    writable: true,
+    description: 'Google Gemini CLI sessions',
+  },
+  mmx: {
+    name: 'MiniMax Code',
+    shortName: 'MiniMax',
+    cliName: 'minimax',
+    color: '#F43F5E', // rose / coral
+    badgeBg: '#881337',
+    shortcut: '6',
+    writable: false,
+    description: 'MiniMax SQLite session store',
+  },
+  qwen: {
+    name: 'Qwen Code',
+    shortName: 'Qwen',
+    cliName: 'qwen',
+    color: '#EAB308', // gold yellow
+    badgeBg: '#713F12',
+    shortcut: '7',
+    writable: true,
+    description: 'Alibaba Qwen Code sessions',
+  },
+  pi: {
+    name: 'Pi Agent',
+    shortName: 'Pi',
+    cliName: 'pi',
+    color: '#14B8A6', // teal
+    badgeBg: '#134E4A',
+    shortcut: '8',
+    writable: true,
+    description: 'Inflection Pi agent entry tree',
+  },
+  kimi: {
+    name: 'Kimi Code',
+    shortName: 'Kimi',
+    cliName: 'kimi',
+    color: '#8B5CF6', // purple / violet
+    badgeBg: '#4C1D95',
+    shortcut: '9',
+    writable: true,
+    description: 'Moonshot Kimi Code sessions',
+  },
+};
+
+export function isCommandAvailable(cmd: string): boolean {
+  try {
+    if (process.platform === 'win32') {
+      execSync(`where.exe ${cmd}`, { stdio: 'ignore' });
+    } else {
+      execSync(`which ${cmd}`, { stdio: 'ignore' });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function detectAgents(): AgentInfo[] {
+  const home = os.homedir();
+  const checks: Record<AgentKey, boolean> = {
+    codex: isCommandAvailable('codex') || fs.existsSync(path.join(home, '.codex')),
+    cc: isCommandAvailable('claude') || fs.existsSync(path.join(home, '.claude')),
+    agy: isCommandAvailable('agy') || fs.existsSync(path.join(home, '.gemini', 'antigravity-cli')) || fs.existsSync(path.join(home, 'AppData', 'Local', 'agy')),
+    oc: isCommandAvailable('opencode') || fs.existsSync(path.join(home, '.local', 'share', 'opencode')),
+    gemini: isCommandAvailable('gemini') || fs.existsSync(path.join(home, '.gemini')),
+    mmx: isCommandAvailable('minimax') || fs.existsSync(path.join(home, '.minimax')),
+    qwen: isCommandAvailable('qwen') || fs.existsSync(path.join(home, '.qwen')),
+    pi: isCommandAvailable('pi') || fs.existsSync(path.join(home, '.pi')),
+    kimi: isCommandAvailable('kimi') || fs.existsSync(path.join(home, '.kimi-code')),
+  };
+
+  return (Object.keys(AGENT_REGISTRY) as AgentKey[]).map((key) => {
+    const meta = AGENT_REGISTRY[key];
+    return {
+      key,
+      name: meta.name,
+      shortName: meta.shortName,
+      cliName: meta.cliName,
+      installed: checks[key] ?? false,
+      writable: meta.writable,
+      color: meta.color,
+      badgeBg: meta.badgeBg,
+      shortcut: meta.shortcut,
+      description: meta.description,
+    };
+  });
+}
+
+export function formatAgo(ms: number): string {
+  if (!ms) return 'never';
+  const deltaSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+  if (deltaSec < 60) return 'just now';
+  const deltaMin = Math.floor(deltaSec / 60);
+  if (deltaMin < 60) return `${deltaMin}m ago`;
+  const deltaHours = Math.floor(deltaMin / 60);
+  if (deltaHours < 24) return `${deltaHours}h ago`;
+  const deltaDays = Math.floor(deltaHours / 24);
+  if (deltaDays < 30) return `${deltaDays}d ago`;
+  const deltaMonths = Math.floor(deltaDays / 30);
+  return `${deltaMonths}mo ago`;
+}
+
+function resolveAgentKey(toolOrKey: string): AgentKey {
+  const lower = toolOrKey.toLowerCase();
+  if (lower === 'codex') return 'codex';
+  if (lower === 'cc' || lower === 'claude') return 'cc';
+  if (lower === 'agy' || lower === 'antigravity') return 'agy';
+  if (lower === 'oc' || lower === 'opencode') return 'oc';
+  if (lower === 'gemini') return 'gemini';
+  if (lower === 'mmx' || lower === 'minimax') return 'mmx';
+  if (lower === 'qwen') return 'qwen';
+  if (lower === 'pi') return 'pi';
+  if (lower === 'kimi') return 'kimi';
+  return 'agy';
+}
+
+export function loadAllThreads(): ThreadItem[] {
+  if (!fs.existsSync(THREADS_DIR)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(THREADS_DIR).filter((f) => f.endsWith('.json'));
+  const threads: ThreadItem[] = [];
+
+  for (const file of files) {
+    try {
+      const fullPath = path.join(THREADS_DIR, file);
+      const raw = fs.readFileSync(fullPath, 'utf8');
+      const data = JSON.parse(raw);
+
+      const tid = data.tid || path.basename(file, '.json');
+      const baseTitle = data.base_title || 'Untitled Session';
+      const cwd = data.cwd || process.cwd();
+      const updated = Number(data.updated) || 0;
+      const elements: any[] = Array.isArray(data.elements) ? data.elements : [];
+
+      // Determine recent agent
+      let recentAgentKey: AgentKey = 'agy';
+      if (typeof data.head === 'string' && data.head.includes(':')) {
+        recentAgentKey = resolveAgentKey(data.head.split(':')[0]);
+      } else if (typeof data.origin === 'string') {
+        recentAgentKey = resolveAgentKey(data.origin.split(':')[0]);
+      }
+
+      // Collect participants
+      const participantSet = new Set<string>();
+      for (const el of elements) {
+        if (el?.author) {
+          const key = resolveAgentKey(el.author);
+          participantSet.add(AGENT_REGISTRY[key]?.shortName || el.author);
+        }
+      }
+      if (participantSet.size === 0) {
+        participantSet.add(AGENT_REGISTRY[recentAgentKey]?.shortName || 'Agy');
+      }
+
+      const tag = Array.from(participantSet).join('+');
+      const title = `${baseTitle} (${tag})`;
+
+      // Copies
+      const copies: Record<string, ThreadCopy> = {};
+      if (data.copies && typeof data.copies === 'object') {
+        for (const [key, cp] of Object.entries<any>(data.copies)) {
+          const tool = key.split(':')[0];
+          const sid = key.split(':')[1] || '';
+          const agentKey = resolveAgentKey(tool);
+          const meta = AGENT_REGISTRY[agentKey];
+          const upto = Number(cp.upto) || 0;
+          const behind = upto < elements.length;
+
+          let resumeCmd = `${meta?.cliName || tool} resume ${sid}`;
+          if (agentKey === 'cc') resumeCmd = `claude --resume ${sid}`;
+          if (agentKey === 'agy') resumeCmd = `agy --conversation ${sid}`;
+          if (agentKey === 'gemini') resumeCmd = `gemini --resume ${sid}`;
+
+          copies[agentKey] = {
+            tool,
+            agentName: meta?.shortName || tool,
+            sid,
+            owned: Boolean(cp.owned),
+            upto,
+            behind,
+            resumeCmd,
+          };
+        }
+      }
+
+      // First user prompt and last user prompt
+      let firstUserPrompt = '';
+      let lastUserPrompt = '';
+      let lastAssistantReply = '';
+      let userTurns = 0;
+      let assistantTurns = 0;
+
+      for (const el of elements) {
+        if (el?.role === 'user' && typeof el.text === 'string' && el.text.trim()) {
+          userTurns++;
+          if (!firstUserPrompt) firstUserPrompt = el.text.trim();
+          lastUserPrompt = el.text.trim();
+        } else if (el?.role === 'assistant' && typeof el.text === 'string' && el.text.trim()) {
+          assistantTurns++;
+          lastAssistantReply = el.text.trim();
+        }
+      }
+
+      const folderName = path.basename(cwd) || cwd;
+      const recentAgentMeta = AGENT_REGISTRY[recentAgentKey] || AGENT_REGISTRY.agy;
+
+      threads.push({
+        tid,
+        title,
+        baseTitle,
+        tag,
+        recentAgent: recentAgentKey,
+        recentAgentName: recentAgentMeta.shortName,
+        recentAgentColor: recentAgentMeta.color,
+        cwd,
+        folderName,
+        updated,
+        updatedAgo: formatAgo(updated),
+        turnCount: elements.length,
+        userTurns,
+        assistantTurns,
+        firstUserPrompt: firstUserPrompt.slice(0, 300),
+        lastUserPrompt: lastUserPrompt.slice(0, 300),
+        lastAssistantReply: lastAssistantReply.slice(0, 300),
+        copies,
+        participants: Array.from(participantSet),
+      });
+    } catch {
+      // Ignore unparseable files
+    }
+  }
+
+  // Sort newest first
+  threads.sort((a, b) => b.updated - a.updated);
+  return threads;
+}
+
+export function filterThreads(
+  threads: ThreadItem[],
+  query: string,
+  scopeAll: boolean,
+  currentCwd: string
+): ThreadItem[] {
+  let list = threads;
+
+  if (!scopeAll && currentCwd) {
+    const normCwd = path.resolve(currentCwd).toLowerCase();
+    list = list.filter((t) => path.resolve(t.cwd).toLowerCase() === normCwd);
+  }
+
+  if (!query || !query.trim()) {
+    return list;
+  }
+
+  const q = query.trim().toLowerCase();
+  return list.filter((t) => {
+    return (
+      t.title.toLowerCase().includes(q) ||
+      t.baseTitle.toLowerCase().includes(q) ||
+      t.recentAgentName.toLowerCase().includes(q) ||
+      t.folderName.toLowerCase().includes(q) ||
+      t.cwd.toLowerCase().includes(q) ||
+      t.firstUserPrompt.toLowerCase().includes(q) ||
+      t.lastUserPrompt.toLowerCase().includes(q)
+    );
+  });
+}
