@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
 set -e
 
-echo -e "\033[0;36m⚡ Installing UniversalResume...\033[0m"
+cat << 'EOF'
+   __  __      _                             __   ____                                
+  / / / /___  (_)   _____  ______________ _ / /  / __ \___  _______  ______ ___  ___ 
+ / / / / __ \/ / | / / _ \/ ___/ ___/ __ `// /  / /_/ / _ \/ ___/ / / / __ `__ \/ _ \
+/ /_/ / / / / /| |/ /  __/ /  (__  ) /_/ // /  / _, _/  __(__  ) /_/ / / / / / /  __/
+\____/_/ /_/_/ |___/\___/_/  /____/\__,_//_/  /_/ |_|\___/____/\__,_/_/ /_/ /_/\___/ 
+EOF
+
+echo "Installing UniversalResume..."
 
 # Check for Python
 if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
-  echo -e "\033[0;31mError: Python 3.9+ is required but not found in PATH.\033[0m"
+  echo "Error: Python 3.9+ is required but not found in PATH."
   exit 1
 fi
 PYTHON_CMD=$(command -v python3 || command -v python)
 
 # Check or install Bun
 if ! command -v bun &>/dev/null; then
-  echo -e "\033[0;33mInstalling Bun...\033[0m"
+  echo "Installing Bun..."
   curl -fsSL https://bun.sh/install | bash
   export BUN_INSTALL="$HOME/.bun"
   export PATH="$BUN_INSTALL/bin:$PATH"
@@ -43,5 +51,5 @@ chmod +x "$TARGET_DIR/bin/resume.js" "$HOME/.local/bin/resume"
 hop install || true
 hop sync || true
 
-echo -e "\033[0;32m✨ UniversalResume installed successfully!\033[0m"
-echo -e "\033[0;36mType 'resume' anywhere in your terminal to start.\033[0m"
+echo -e "\n\033[0;32mUniversalResume installed successfully!\033[0m"
+echo "Type 'resume' anywhere in your terminal to start."

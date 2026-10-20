@@ -1,7 +1,15 @@
 # UniversalResume / SameThread one-line installer for Windows
 $ErrorActionPreference = "Stop"
 
-Write-Host "⚡ Installing UniversalResume..." -ForegroundColor Cyan
+Write-Host @'
+   __  __      _                             __   ____                                
+  / / / /___  (_)   _____  ______________ _ / /  / __ \___  _______  ______ ___  ___ 
+ / / / / __ \/ / | / / _ \/ ___/ ___/ __ `// /  / /_/ / _ \/ ___/ / / / __ `__ \/ _ \
+/ /_/ / / / / /| |/ /  __/ /  (__  ) /_/ // /  / _, _/  __(__  ) /_/ / / / / / /  __/
+\____/_/ /_/_/ |___/\___/_/  /____/\__,_//_/  /_/ |_|\___/____/\__,_/_/ /_/ /_/\___/ 
+'@ -ForegroundColor White
+
+Write-Host "Installing UniversalResume..."
 
 # Check for Python
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
@@ -44,5 +52,5 @@ if (Test-Path $npmDir) {
     Copy-Item -Force "$targetDir\bin\resume.cmd" "$npmDir\resume.cmd"
 }
 
-Write-Host "✨ UniversalResume installed successfully!" -ForegroundColor Green
-Write-Host "Type 'resume' anywhere in your terminal to start." -ForegroundColor Cyan
+Write-Host "`nUniversalResume installed successfully!" -ForegroundColor Green
+Write-Host "Type 'resume' anywhere in your terminal to start."
