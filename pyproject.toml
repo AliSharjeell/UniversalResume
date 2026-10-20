@@ -26,6 +26,7 @@ dependencies = []
 [project.scripts]
 hop = "samethread.cli:main"
 samethread = "samethread.cli:main"
+resume = "samethread.cli:main_resume_tui"
 
 [project.urls]
 Homepage = "https://github.com/GodrezJr2/samethread"

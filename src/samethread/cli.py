@@ -254,7 +254,29 @@ def main():
     p.add_argument('--yes', action='store_true')
     p.set_defaults(fn=cmd_clean)
 
+    for name in ('tui', 'ui'):
+        p = sub.add_parser(name, help='launch the OpenTUI interactive terminal session selector')
+        p.set_defaults(fn=lambda a: main_resume_tui())
+
     args = ap.parse_args()
     settings['quiet'] = getattr(args, 'quiet', False) or args.cmd == 'hook'
     os.makedirs(os.path.dirname(INDEX_PATH), exist_ok=True)
     args.fn(args)
+
+
+def main_resume_tui():
+    """Launch the OpenTUI interactive resume interface."""
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    tui_script = os.path.join(root_dir, 'tui', 'index.tsx')
+    bun_exe = shutil.which('bun')
+    if bun_exe and os.path.exists(tui_script):
+        cmd = [bun_exe, 'run', tui_script] + sys.argv[1:]
+        try:
+            sys.exit(subprocess.call(cmd))
+        except KeyboardInterrupt:
+            sys.exit(0)
+    else:
+        # Fallback to standard hop list
+        sys.argv = ['hop', 'list'] + sys.argv[1:]
+        main()
+
