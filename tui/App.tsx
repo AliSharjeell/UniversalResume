@@ -5,6 +5,7 @@ import { detectAgents, filterThreads, loadAllThreads, runSync } from './data.ts'
 import { Header } from './components/Header.tsx';
 import { ChatList } from './components/ChatList.tsx';
 import { AgentPicker } from './components/AgentPicker.tsx';
+import { EyeStartupTransition } from './components/EyeStartupTransition.tsx';
 
 interface AppProps {
   currentCwd: string;
@@ -27,7 +28,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   const [scopeAll, setScopeAll] = useState<boolean>(inFolderCount === 0);
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [view, setView] = useState<ViewMode>('list');
+  const [view, setView] = useState<ViewMode>(initialQuery ? 'list' : 'intro');
   const [agentPickerIndex, setAgentPickerIndex] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -79,6 +80,19 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   useKeyboard((key) => {
     if (key.ctrl && key.name === 'c') {
       onExit();
+      return;
+    }
+
+    if (view === 'intro') {
+      if (key.name === 'escape') {
+        onExit();
+        return;
+      }
+      // Any key skips intro transition immediately
+      setView('list');
+      if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta && key.name !== 'return') {
+        setSearchQuery(key.sequence);
+      }
       return;
     }
 
@@ -206,7 +220,12 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
       borderColor="#404040"
       padding={1}
     >
-      {view === 'list' ? (
+      {view === 'intro' ? (
+        <EyeStartupTransition
+          isSyncing={isSyncing}
+          onComplete={() => setView('list')}
+        />
+      ) : view === 'list' ? (
         <>
           <Header
             searchQuery={searchQuery}
