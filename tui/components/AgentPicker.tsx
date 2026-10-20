@@ -20,7 +20,7 @@ export function AgentPicker({
       <text dim color="#94A3B8" marginBottom={1}>
         {`Directory: ${thread.cwd}`}
       </text>
-      <text color="#F59E0B" marginBottom={1}>
+      <text color="#FACC15" marginBottom={1}>
         Select agent to resume with (press 1-9 or Enter):
       </text>
 
@@ -40,15 +40,21 @@ export function AgentPicker({
           const num = `${agent.shortcut}. `;
           const name = agent.name.padEnd(24);
           const modeStr = mode.padEnd(20);
+          const line = `${prefix}${num}${name}${modeStr}${recentTag}`;
 
           return (
-            <text
+            <box
               key={agent.key}
-              bold={isSelected}
-              color={isSelected ? '#38BDF8' : '#CBD5E1'}
+              width="100%"
+              backgroundColor={isSelected ? '#1E3A5F' : undefined}
             >
-              {`${prefix}${num}${name}${modeStr}${recentTag}`}
-            </text>
+              <text
+                bold={isSelected}
+                color={isSelected ? '#FACC15' : '#CBD5E1'}
+              >
+                {line}
+              </text>
+            </box>
           );
         })}
       </box>

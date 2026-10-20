@@ -12,7 +12,7 @@ interface ChatListProps {
 export function ChatList({
   threads,
   selectedIndex,
-  maxVisible = 16,
+  maxVisible = 15,
   scopeAll,
   termWidth = 80,
 }: ChatListProps) {
@@ -23,7 +23,7 @@ export function ChatList({
           No conversations found
         </text>
         <text dim color="#64748B" marginTop={1}>
-          Press Tab to switch scope, or Backspace to clear filter
+          Press Tab to switch scope, or Backspace to clear search
         </text>
       </box>
     );
@@ -45,14 +45,14 @@ export function ChatList({
   const visibleThreads = threads.slice(startIdx, startIdx + maxVisible);
 
   // Column calculations
-  const totalW = Math.max(70, termWidth - 6);
-  const agentColW = 12;
-  const timeColW = 11;
-  const folderColW = scopeAll ? 18 : 0;
-  const titleColW = Math.max(25, totalW - 2 - agentColW - timeColW - folderColW);
+  const maxLineW = Math.max(50, termWidth - 4);
+  const agentColW = 10;
+  const timeColW = 10;
+  const folderColW = scopeAll ? 16 : 0;
+  const titleColW = Math.max(20, maxLineW - 2 - agentColW - timeColW - folderColW);
 
   return (
-    <box flexDirection="column" flexGrow={1} marginBottom={1}>
+    <box flexDirection="column" flexGrow={1}>
       {visibleThreads.map((thread, idx) => {
         const actualIndex = startIdx + idx;
         const isSelected = actualIndex === safeSelected;
@@ -75,16 +75,24 @@ export function ChatList({
           : '';
         const timeStr = thread.updatedAgo.padStart(timeColW);
 
-        const line = `${prefix}${titleStr}${agentStr}${folderStr}${timeStr}`;
+        let line = `${prefix}${titleStr}${agentStr}${folderStr}${timeStr}`;
+        if (line.length > maxLineW) {
+          line = line.slice(0, maxLineW);
+        }
 
         return (
-          <text
+          <box
             key={thread.tid}
-            bold={isSelected}
-            color={isSelected ? '#38BDF8' : '#CBD5E1'}
+            width="100%"
+            backgroundColor={isSelected ? '#1E3A5F' : undefined}
           >
-            {line}
-          </text>
+            <text
+              bold={isSelected}
+              color={isSelected ? '#FACC15' : '#CBD5E1'}
+            >
+              {line}
+            </text>
+          </box>
         );
       })}
     </box>

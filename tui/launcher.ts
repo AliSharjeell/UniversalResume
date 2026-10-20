@@ -3,22 +3,21 @@ import path from 'node:path';
 import type { AgentKey, ThreadItem } from './types.ts';
 
 export function launchResume(thread: ThreadItem, agentKey: AgentKey, onComplete?: () => void) {
-  // Find python executable
   const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
   const universalResumeDir = path.resolve(__dirname, '..');
-
-  // We invoke the Python samethread module with resume command
-  const args = [
-    '-c',
-    `import sys; sys.path.insert(0, r'${path.join(universalResumeDir, 'src')}'); from samethread.cli import main; sys.argv=['hop', 'resume', '${agentKey}', '${thread.tid}']; main()`
-  ];
+  const srcDir = path.join(universalResumeDir, 'src');
 
   const targetCwd = thread.cwd && path.isAbsolute(thread.cwd) ? thread.cwd : process.cwd();
 
-  const child = spawn(pythonCmd, args, {
+  const env = {
+    ...process.env,
+    PYTHONPATH: srcDir + (process.platform === 'win32' ? ';' : ':') + (process.env.PYTHONPATH || ''),
+  };
+
+  const child = spawn(pythonCmd, ['-m', 'samethread.cli', 'resume', agentKey, thread.tid], {
     cwd: targetCwd,
     stdio: 'inherit',
-    shell: true,
+    env,
   });
 
   child.on('exit', (code) => {

@@ -5,7 +5,6 @@ import { detectAgents, filterThreads, loadAllThreads, runSync } from './data.ts'
 import { Header } from './components/Header.tsx';
 import { ChatList } from './components/ChatList.tsx';
 import { AgentPicker } from './components/AgentPicker.tsx';
-import { Footer } from './components/Footer.tsx';
 
 interface AppProps {
   currentCwd: string;
@@ -196,7 +195,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   });
 
   const folderName = currentCwd.split(/[\\/]/).filter(Boolean).pop() || currentCwd;
-  const maxVisibleChats = Math.max(5, height - 7);
+  const maxVisibleChats = Math.max(5, height - 8);
 
   return (
     <box
@@ -234,8 +233,6 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
           />
         )
       )}
-
-      <Footer view={view} statusMessage={statusMessage} />
     </box>
   );
 }
