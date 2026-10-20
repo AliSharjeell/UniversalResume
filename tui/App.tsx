@@ -221,7 +221,8 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         justifyContent="center"
       >
         <EyeStartupTransition
-          isSyncing={isSyncing}
+          width={width}
+          height={height}
           onComplete={() => setView('list')}
         />
       </box>
