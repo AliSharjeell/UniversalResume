@@ -8,14 +8,14 @@ Type <code>resume</code> in any terminal. See all your coding conversations acro
   <img src="assets/1-hit-usage-limit.png" width="49%" alt="Hit agent usage limit" />
   <img src="assets/2-universal-resume-tui.png" width="49%" alt="Universal Resume TUI" />
   <br>
-  <sub>Row 1: Hit usage limit &nbsp;&bull;&nbsp; Universal Resume session list</sub>
+  <sub>Hit usage limit &nbsp;&bull;&nbsp; Universal Resume session list</sub>
 </p>
 
 <p align="center">
   <img src="assets/3-pick-agent.png" width="49%" alt="Choose agent to resume with" />
   <img src="assets/4-resumed-conversation.png" width="49%" alt="Continue coding in another agent" />
   <br>
-  <sub>Row 2: Choose agent to resume &nbsp;&bull;&nbsp; Seamless continuation in Antigravity</sub>
+  <sub>Choose agent to resume &nbsp;&bull;&nbsp; Seamless continuation in Antigravity</sub>
 </p>
 
 <p align="center">
