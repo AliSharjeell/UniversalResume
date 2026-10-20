@@ -144,6 +144,8 @@ class Sync:
         if not pending:
             return
         for key, s in self.sessions.items():
+            if not pending:
+                break
             if AGENTS[s['tool']].writable or key in self.idx['copies'] or s['updated'] < min(pending.values()):
                 continue
             els = self.load(s)
