@@ -5,10 +5,6 @@ Type <code>resume</code> in any terminal. See all your coding conversations acro
 </p>
 
 <p align="center">
-Built with <a href="https://github.com/anomalyco/opentui">OpenTUI</a>.
-</p>
-
-<p align="center">
   <img src="assets/1-hit-usage-limit.png" width="49%" alt="Hit agent usage limit" />
   <img src="assets/2-universal-resume-tui.png" width="49%" alt="Universal Resume TUI" />
   <br>
@@ -20,6 +16,10 @@ Built with <a href="https://github.com/anomalyco/opentui">OpenTUI</a>.
   <img src="assets/4-resumed-conversation.png" width="49%" alt="Continue coding in another agent" />
   <br>
   <sub>Row 2: Choose agent to resume &nbsp;&bull;&nbsp; Seamless continuation in Antigravity</sub>
+</p>
+
+<p align="center">
+Built with <a href="https://github.com/anomalyco/opentui">OpenTUI</a>.
 </p>
 
 ---
