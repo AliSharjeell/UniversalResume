@@ -17,10 +17,10 @@ export function AgentPicker({
       <text bold color="#FFFFFF" marginBottom={1}>
         {`Resume: ${thread.baseTitle}`}
       </text>
-      <text dim color="#94A3B8" marginBottom={1}>
+      <text dim color="#737373" marginBottom={1}>
         {`Directory: ${thread.cwd}`}
       </text>
-      <text color="#FACC15" marginBottom={1}>
+      <text bold color="#FFFFFF" marginBottom={1}>
         Select agent to resume with (press 1-9 or Enter):
       </text>
 
@@ -46,11 +46,11 @@ export function AgentPicker({
             <box
               key={agent.key}
               width="100%"
-              backgroundColor={isSelected ? '#1E3A5F' : undefined}
+              backgroundColor={isSelected ? '#262626' : undefined}
             >
               <text
                 bold={isSelected}
-                color={isSelected ? '#FACC15' : '#CBD5E1'}
+                color={isSelected ? '#FFFFFF' : '#A3A3A3'}
               >
                 {line}
               </text>
@@ -59,7 +59,7 @@ export function AgentPicker({
         })}
       </box>
 
-      <text dim color="#64748B">
+      <text dim color="#737373">
         [Enter] Launch   [1-9] Quick Pick   [Esc] Back to list
       </text>
     </box>

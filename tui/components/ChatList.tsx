@@ -19,10 +19,10 @@ export function ChatList({
   if (threads.length === 0) {
     return (
       <box flexDirection="column" padding={2} alignItems="center" justifyContent="center" flexGrow={1}>
-        <text color="#E2E8F0" bold>
+        <text color="#FFFFFF" bold>
           No conversations found
         </text>
-        <text dim color="#64748B" marginTop={1}>
+        <text dim color="#737373" marginTop={1}>
           Press Tab to switch scope, or Backspace to clear search
         </text>
       </box>
@@ -84,11 +84,11 @@ export function ChatList({
           <box
             key={thread.tid}
             width="100%"
-            backgroundColor={isSelected ? '#1E3A5F' : undefined}
+            backgroundColor={isSelected ? '#262626' : undefined}
           >
             <text
               bold={isSelected}
-              color={isSelected ? '#FACC15' : '#CBD5E1'}
+              color={isSelected ? '#FFFFFF' : '#A3A3A3'}
             >
               {line}
             </text>

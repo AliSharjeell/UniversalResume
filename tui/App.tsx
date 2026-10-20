@@ -203,7 +203,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
       width="100%"
       height="100%"
       borderStyle="round"
-      borderColor="#475569"
+      borderColor="#404040"
       padding={1}
     >
       {view === 'list' ? (

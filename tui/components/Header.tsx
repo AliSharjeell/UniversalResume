@@ -19,26 +19,26 @@ export function Header({
 }: HeaderProps) {
   return (
     <box flexDirection="column" marginBottom={1}>
-      {/* GHUI-style ASCII Branding */}
+      {/* Monochrome ASCII Branding */}
       <box marginBottom={1}>
-        <ascii-font text="UNIVERSAL RESUME" font="tiny" color="#38BDF8" />
+        <ascii-font text="UNIVERSAL RESUME" font="tiny" color="#FFFFFF" />
       </box>
 
       {/* Scope Switcher */}
       <box flexDirection="column" marginBottom={1}>
-        <text dim color="#64748B">
+        <text dim color="#737373">
           Tab to switch scope:
         </text>
         <box flexDirection="row" justifyContent="space-between" width="100%">
           <box flexDirection="row" gap={2}>
-            <text bold color={!scopeAll ? '#38BDF8' : '#64748B'}>
+            <text bold={!scopeAll} color={!scopeAll ? '#FFFFFF' : '#737373'}>
               {!scopeAll ? `[ In Folder: ${folderName} (${inFolderCount}) ]` : `  In Folder: ${folderName} (${inFolderCount})  `}
             </text>
-            <text bold color={scopeAll ? '#38BDF8' : '#64748B'}>
+            <text bold={scopeAll} color={scopeAll ? '#FFFFFF' : '#737373'}>
               {scopeAll ? `[ Global (${globalCount}) ]` : `  Global (${globalCount})  `}
             </text>
           </box>
-          <text color={isSyncing ? '#F59E0B' : '#64748B'}>
+          <text color={isSyncing ? '#FFFFFF' : '#737373'}>
             {isSyncing ? 'Syncing...' : 'Synced'}
           </text>
         </box>
@@ -46,13 +46,13 @@ export function Header({
 
       {/* Search Bar */}
       <box flexDirection="row">
-        <text color="#94A3B8">Search: </text>
+        <text color="#A3A3A3">Search: </text>
         {searchQuery ? (
           <text bold color="#FFFFFF">
             {searchQuery}█
           </text>
         ) : (
-          <text dim color="#475569">
+          <text dim color="#525252">
             type to search... (Esc to clear)
           </text>
         )}

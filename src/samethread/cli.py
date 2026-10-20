@@ -16,7 +16,7 @@ import sys
 
 from . import __version__
 from .agents import AGENTS, NAMES, resolve, targets
-from .core import (HANDOFF_DIR, INDEX_PATH, LOCK_PATH, THREAD_DIR, ago, load_config, now_ms, read_json, same_path,
+from .core import (HANDOFF_DIR, HOP_DIR, INDEX_PATH, LOCK_PATH, THREAD_DIR, ago, load_config, now_ms, read_json, same_path,
                    settings, write_json)
 from .sync import detach, locked_sync, render, tag, thread_title, wait_lock
 
@@ -53,7 +53,8 @@ def shown(cmd):
 
 def launch(cmd, cwd):
     exe = shutil.which(cmd[0]) or cmd[0]
-    sys.exit(subprocess.call([exe] + cmd[1:], cwd=cwd if cwd and os.path.isdir(cwd) else None))
+    use_shell = sys.platform == 'win32' and exe.lower().endswith(('.cmd', '.bat'))
+    sys.exit(subprocess.call([exe] + cmd[1:], cwd=cwd if cwd and os.path.isdir(cwd) else None, shell=use_shell))
 
 
 def cmd_list(args):
@@ -269,12 +270,35 @@ def main_resume_tui():
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tui_script = os.path.join(root_dir, 'tui', 'index.tsx')
     bun_exe = shutil.which('bun')
+    pending_file = os.path.join(HOP_DIR, 'pending_launch.json')
+
+    if os.path.exists(pending_file):
+        try:
+            os.remove(pending_file)
+        except Exception:
+            pass
+
     if bun_exe and os.path.exists(tui_script):
         cmd = [bun_exe, 'run', tui_script] + sys.argv[1:]
+        env = dict(os.environ, RESUME_RUNNER='1')
         try:
-            sys.exit(subprocess.call(cmd))
+            ret = subprocess.call(cmd, env=env)
         except KeyboardInterrupt:
             sys.exit(0)
+
+        if ret != 0:
+            sys.exit(ret)
+
+        if os.path.exists(pending_file):
+            launch_spec = read_json(pending_file, None)
+            try:
+                os.remove(pending_file)
+            except Exception:
+                pass
+            if launch_spec and 'agentKey' in launch_spec and 'tid' in launch_spec:
+                sys.argv = ['hop', 'resume', launch_spec['agentKey'], launch_spec['tid']]
+                main()
+        sys.exit(0)
     else:
         # Fallback to standard hop list
         sys.argv = ['hop', 'list'] + sys.argv[1:]
