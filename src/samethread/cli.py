@@ -72,8 +72,39 @@ def cmd_list(args):
             print(f'       {NAMES.get(tool, tool):<9} {state:<8}{behind}  {shown(AGENTS[tool].resume_cmd(sid))}')
 
 
+def format_seamless_prompt(th, cfg, path):
+    tid = th['tid']
+    title = th['base_title']
+    origin = tag(th) or 'another agent'
+
+    msgs = render(th, cfg)
+    recent_blocks = []
+    total = 0
+    max_chars = 3500
+    for m in reversed(msgs):
+        role_label = 'User' if m['role'] == 'user' else 'Assistant'
+        txt = re.sub(r'^\[hop\][^\n]*\n\n?', '', m['text']).strip()
+        if len(txt) > 800:
+            txt = txt[:790] + '...'
+        block = f'{role_label}:\n{txt}\n'
+        if total + len(block) > max_chars and recent_blocks:
+            break
+        recent_blocks.append(block)
+        total += len(block)
+    recent_blocks.reverse()
+    transcript_text = '\n'.join(recent_blocks)
+
+    return (
+        f'[hop-handoff:{tid}] Continuing conversation "{title}" seamlessly from {origin}.\n\n'
+        f'--- Prior Conversation Context ---\n'
+        f'{transcript_text}\n'
+        f'--- End of Context ---\n\n'
+        f'Pick up exactly where we left off. Greet the user naturally, give a 1-sentence recap of the task in progress, and ask how to proceed.'
+    )
+
+
 def seed(agent, th):
-    """Continue a chat in an agent hop can't write into: a new conversation reads the transcript first."""
+    """Continue a chat in an agent hop can't write into with full seamless context."""
     cfg = load_config()
     path = os.path.join(HANDOFF_DIR, th['tid'] + '.md')
     body = [f'# {thread_title(th)}\n']
@@ -85,9 +116,7 @@ def seed(agent, th):
     pending = read_json(os.path.join(HANDOFF_DIR, 'pending.json'), {})
     pending[th['tid']] = now_ms() - 60000
     write_json(os.path.join(HANDOFF_DIR, 'pending.json'), pending)
-    prompt = (f'[hop-handoff:{th["tid"]}] We are continuing the conversation "{th["base_title"]}" that started in '
-              f'{tag(th)}. Read the whole transcript at {path} with your file tool (all of it, page through if long). '
-              f'Then reply with one short line saying you are ready, and wait for me.')
+    prompt = format_seamless_prompt(th, cfg, path)
     launch(agent.seed_cmd(prompt), th['cwd'])
 
 
