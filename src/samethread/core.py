@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 
 HOME = os.path.expanduser('~')
@@ -121,6 +122,9 @@ def load_config():
         user = {}
     if user.get('targets') == ['cc', 'oc']:  # the v0.1 default; newer versions detect installed agents
         user['targets'] = 'auto'
+        write_json(CONFIG_PATH, {**DEFAULT_CONFIG, **user}, indent=2)
+    if user.get('max_age_days') == 30:
+        user['max_age_days'] = 365
         write_json(CONFIG_PATH, {**DEFAULT_CONFIG, **user}, indent=2)
     return {**DEFAULT_CONFIG, **user}
 

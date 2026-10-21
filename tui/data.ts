@@ -349,7 +349,15 @@ export function loadAllThreads(): ThreadItem[] {
         }
       }
 
-      const folderName = path.basename(cwd) || cwd;
+      let folderName = path.basename(cwd) || cwd;
+      if (
+        !cwd ||
+        cwd === '~' ||
+        cwd.toLowerCase() === os.homedir().toLowerCase() ||
+        cwd.toLowerCase() === path.resolve(os.homedir()).toLowerCase()
+      ) {
+        folderName = '~';
+      }
       const recentAgentMeta = AGENT_REGISTRY[recentAgentKey] || AGENT_REGISTRY.agy;
 
       threads.push({
