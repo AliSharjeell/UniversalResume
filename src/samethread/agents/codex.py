@@ -164,7 +164,7 @@ class Codex(Agent):
             return 'notify already installed'
         head = text.split('\n[', 1)[0]
         if re.search(r'^\s*notify\s*=', head, re.M):
-            return 'skipped: config.toml already sets `notify` (Codex allows one); sync runs via other agents or `hop sync`'
+            return 'skipped: config.toml already sets `notify` (Codex allows one); sync runs automatically on resume'
         line = json.dumps([hookkit.bare_python().replace('\\', '/'), '-m', 'samethread', 'hook'])
         if dry:
             print(f'  [dry-run] would add `notify` to {path}')

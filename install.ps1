@@ -33,7 +33,6 @@ try {
     & npm link --silent 2>$null
     & python -m pip install -e . --quiet
     & hop install
-    & hop sync
 } finally {
     Pop-Location
 }

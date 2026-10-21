@@ -229,8 +229,14 @@ def cmd_install(args, remove=False):
         if msg:
             print(f'  {agent.name}: {msg}')
     if not args.dry_run:
-        print('\nHooks removed. Mirrors stay; delete them with `hop clean --yes`.' if remove else
-              '\nDone. Run `hop sync` once to mirror your existing chats; after that it runs by itself.')
+        if remove:
+            print('\nHooks removed. Mirrors stay; delete them with `hop clean --yes`.')
+        else:
+            print('\nHooks installed. Universal Resume keeps your chats synced automatically.')
+            try:
+                locked_sync(load_config(), 365, False)
+            except Exception:
+                pass
 
 
 def main():
