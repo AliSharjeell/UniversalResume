@@ -60,7 +60,7 @@ class Hermes(Agent):
         return els
 
     def resume_cmd(self, sid):
-        return [self._bin(), 'resume', sid]
+        return [self._bin(), '--resume', sid]
 
     def seed_cmd(self, prompt):
-        return [self._bin(), 'chat', '-m', prompt]
+        return [self._bin(), 'chat', '-q', prompt]

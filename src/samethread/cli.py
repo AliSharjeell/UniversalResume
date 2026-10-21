@@ -109,7 +109,7 @@ def cmd_resume(args):
             cfg = load_config()
             res = agent.write(None, th['cwd'], render(th, cfg), thread_title(th), {})
             if res:
-                sid, seen, sig = res
+                sid, seen, sig = res['id'], res['seen'], res['sig']
                 th['copies'][f'{key}:{sid}'] = {'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
                 write_json(os.path.join(THREAD_DIR, th['tid'] + '.json'), th)
                 launch(agent.resume_cmd(sid), th['cwd'])

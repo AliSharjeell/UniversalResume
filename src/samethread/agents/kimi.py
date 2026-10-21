@@ -7,7 +7,7 @@ import shutil
 import uuid
 
 from .. import hookkit
-from ..core import HOME, HopError, dumps, el, file_sig, fmt_call, fmt_result, lp, read_json, read_jsonl, write_lines
+from ..core import HOME, HopError, dumps, el, file_sig, fmt_call, fmt_result, iso_ms, lp, read_json, read_jsonl, write_lines
 from .base import Agent
 
 ROOT = os.path.join(HOME, '.kimi-code')
@@ -54,7 +54,7 @@ class Kimi(Agent):
             out['kimi:' + sid] = self.session(sid, path=wire, dir=d['sessionDir'], title=state.get('title'),
                                               cwd=os.path.normpath(state.get('cwd') or d.get('workDir') or HOME),
                                               is_hop=bool((state.get('custom') or {}).get('samethread')),
-                                              sig=file_sig(wire), updated=state.get('updatedAt') or 0)
+                                              sig=file_sig(wire), updated=iso_ms(state.get('updatedAt')) or 0)
         return out
 
     def read(self, s, cfg):

@@ -314,7 +314,7 @@ export function loadAllThreads(): ThreadItem[] {
           if (agentKey === 'cursor') resumeCmd = `cursor-agent resume ${sid}`;
           if (agentKey === 'grok') resumeCmd = `grok --resume ${sid}`;
           if (agentKey === 'deepseek') resumeCmd = `deepseek --resume ${sid}`;
-          if (agentKey === 'hermes') resumeCmd = `hermes resume ${sid}`;
+          if (agentKey === 'hermes') resumeCmd = `hermes --resume ${sid}`;
           if (agentKey === 'openclaw') resumeCmd = `openclaw --resume ${sid}`;
           if (agentKey === 'aider') resumeCmd = `aider --restore-chat-history`;
           if (agentKey === 'openhands') resumeCmd = `openhands --resume ${sid}`;
@@ -428,7 +428,6 @@ export async function runSync(): Promise<{ success: boolean; message: string }> 
       {
         cwd: universalResumeDir,
         stdio: 'ignore',
-        shell: true,
       }
     );
 
@@ -461,7 +460,6 @@ export function runSyncSync(): boolean {
       {
         cwd: universalResumeDir,
         stdio: 'ignore',
-        shell: true,
       }
     );
     return res.status === 0;
