@@ -158,5 +158,45 @@ class Antigravity(unittest.TestCase):
             ('tool', '▸ run_command: npm test'), ('tool', '  ⎿ 1 failing')])
 
 
+class Regressions(unittest.TestCase):
+    def test_kimi_updated_timestamp_is_integer(self):
+        s_dir = os.path.join(TMP, '.kimi-code', 'sessions', 'test_session')
+        os.makedirs(os.path.join(s_dir, 'agents', 'main'), exist_ok=True)
+        idx_path = os.path.join(TMP, '.kimi-code', 'session_index.jsonl')
+        wire = os.path.join(s_dir, 'agents', 'main', 'wire.jsonl')
+        with open(wire, 'w') as f:
+            f.write('')
+        with open(idx_path, 'w') as f:
+            f.write(json.dumps({'sessionId': 's1', 'sessionDir': s_dir, 'workDir': TMP}) + '\n')
+        with open(os.path.join(s_dir, 'state.json'), 'w') as f:
+            f.write(json.dumps({'updatedAt': '2026-07-18T13:10:14.672Z', 'title': 'Test'}))
+
+        sessions = AGENTS['kimi'].list(CFG)
+        self.assertIn('kimi:s1', sessions)
+        self.assertIsInstance(sessions['kimi:s1']['updated'], int)
+        mixed = [sessions['kimi:s1'], {'updated': 1790000000000}]
+        sorted(mixed, key=lambda s: s['updated'])
+
+    def test_hermes_cli_commands(self):
+        agent = AGENTS['hermes']
+        cmd = agent.resume_cmd('test-session')
+        self.assertIn('--resume', cmd)
+        self.assertNotIn('resume', cmd[1:])
+        seed = agent.seed_cmd('hello')
+        self.assertIn('-q', seed)
+        self.assertNotIn('-m', seed)
+
+    def test_on_demand_resume_dict_unpacking(self):
+        th = thread([e('1', 'user', 'hello')])
+        agent = AGENTS['codex']
+        cfg = core.DEFAULT_CONFIG
+        res = agent.write(None, th['cwd'], sync.render(th, cfg), sync.thread_title(th), {})
+        # Simulating cli.py line 112: unpacking must succeed without ValueError
+        sid = res['id']
+        seen = res['seen']
+        sig = res['sig']
+        self.assertTrue(bool(sid and sig))
+
+
 if __name__ == '__main__':
     unittest.main()
