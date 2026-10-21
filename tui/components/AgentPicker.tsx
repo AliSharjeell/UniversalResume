@@ -5,6 +5,7 @@ interface AgentPickerProps {
   thread: ThreadItem;
   agents: AgentInfo[];
   selectedIndex: number;
+  errorMessage?: string;
   onSelect?: (agentKey: AgentKey) => void;
 }
 
@@ -12,6 +13,7 @@ export function AgentPicker({
   thread,
   agents,
   selectedIndex,
+  errorMessage,
   onSelect,
 }: AgentPickerProps) {
   return (
@@ -26,23 +28,32 @@ export function AgentPicker({
         Select agent to resume with (press 1-9, ↑/↓, or Enter):
       </text>
 
+      {errorMessage && (
+        <text bold color="#F87171" marginBottom={1}>
+          {`  ⚠  ${errorMessage}`}
+        </text>
+      )}
+
       <box flexDirection="column" marginBottom={1}>
         {agents.map((agent, idx) => {
           const isSelected = idx === selectedIndex;
           const isRecent = agent.key === thread.recentAgent;
-          const hasCopy = Boolean(thread.copies[agent.key]);
-          const mode = hasCopy
-            ? 'native copy'
-            : agent.writable
-            ? 'native mirror'
-            : 'seeded handoff';
+          const mode = 'native copy';
+          const installedStr = agent.installed ? 'installed' : 'not installed';
           const recentTag = isRecent ? ' (recent agent)' : '';
 
           const prefix = isSelected ? '> ' : '  ';
           const num = `${agent.shortcut}.`.padEnd(4);
-          const name = agent.name.padEnd(24);
-          const modeStr = mode.padEnd(20);
-          const line = `${prefix}${num}${name}${modeStr}${recentTag}`;
+          const name = agent.name.padEnd(22);
+          const modeStr = mode.padEnd(16);
+          const statusStr = installedStr.padEnd(16);
+          const line = `${prefix}${num}${name}${modeStr}${statusStr}${recentTag}`;
+
+          const textColor = isSelected
+            ? '#FFFFFF'
+            : agent.installed
+            ? '#E5E5E5'
+            : '#525252';
 
           return (
             <box
@@ -53,7 +64,7 @@ export function AgentPicker({
             >
               <text
                 bold={isSelected}
-                color={isSelected ? '#FFFFFF' : '#A3A3A3'}
+                color={textColor}
               >
                 {line}
               </text>

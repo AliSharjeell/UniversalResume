@@ -29,6 +29,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [view, setView] = useState<ViewMode>('list');
   const [agentPickerIndex, setAgentPickerIndex] = useState<number>(0);
+  const [pickerError, setPickerError] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
@@ -133,6 +134,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         if (selectedThread) {
           const recentIdx = agents.findIndex((a) => a.key === selectedThread.recentAgent);
           setAgentPickerIndex(recentIdx >= 0 ? recentIdx : 0);
+          setPickerError('');
           setView('agent-picker');
         }
         return;
@@ -159,16 +161,19 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
     } else if (view === 'agent-picker') {
       if (key.name === 'escape' || key.name === 'left' || key.name === 'backspace') {
         setView('list');
+        setPickerError('');
         return;
       }
 
       if (key.name === 'up' || (key.ctrl && key.name === 'p')) {
         setAgentPickerIndex((i) => Math.max(0, i - 1));
+        setPickerError('');
         return;
       }
 
       if (key.name === 'down' || (key.ctrl && key.name === 'n')) {
         setAgentPickerIndex((i) => Math.min(agents.length - 1, i + 1));
+        setPickerError('');
         return;
       }
 
@@ -177,6 +182,10 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
         const num = parseInt(key.sequence, 10);
         if (num >= 1 && num <= agents.length) {
           const chosen = agents[num - 1];
+          if (!chosen.installed) {
+            setPickerError(`${chosen.name} is not installed`);
+            return;
+          }
           if (selectedThread) {
             doLaunch(selectedThread, chosen.key);
           }
@@ -186,6 +195,10 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
 
       if (key.name === 'return') {
         const chosen = agents[agentPickerIndex];
+        if (chosen && !chosen.installed) {
+          setPickerError(`${chosen.name} is not installed`);
+          return;
+        }
         if (selectedThread && chosen) {
           doLaunch(selectedThread, chosen.key);
         }
@@ -231,6 +244,7 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
             onChoose={(th) => {
               const recentIdx = agents.findIndex((a) => a.key === th.recentAgent);
               setAgentPickerIndex(recentIdx >= 0 ? recentIdx : 0);
+              setPickerError('');
               setView('agent-picker');
             }}
           />
@@ -241,7 +255,13 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
             thread={selectedThread}
             agents={agents}
             selectedIndex={agentPickerIndex}
+            errorMessage={pickerError}
             onSelect={(agentKey) => {
+              const chosen = agents.find((a) => a.key === agentKey);
+              if (chosen && !chosen.installed) {
+                setPickerError(`${chosen.name} is not installed`);
+                return;
+              }
               doLaunch(selectedThread, agentKey);
             }}
           />

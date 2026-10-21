@@ -203,7 +203,7 @@ export function detectAgents(): AgentInfo[] {
     pi: isCommandAvailable('pi') || fs.existsSync(path.join(home, '.pi')),
   };
 
-  return (Object.keys(AGENT_REGISTRY) as AgentKey[]).map((key) => {
+  const list = (Object.keys(AGENT_REGISTRY) as AgentKey[]).map((key) => {
     const meta = AGENT_REGISTRY[key];
     return {
       key,
@@ -218,6 +218,18 @@ export function detectAgents(): AgentInfo[] {
       description: meta.description,
     };
   });
+
+  // Sort installed agents first so users don't get overwhelmed and 1-9 shortcuts map to installed agents
+  list.sort((a, b) => {
+    if (a.installed === b.installed) return 0;
+    return a.installed ? -1 : 1;
+  });
+
+  list.forEach((agent, idx) => {
+    agent.shortcut = String(idx + 1);
+  });
+
+  return list;
 }
 
 export function formatAgo(ms: number): string {
