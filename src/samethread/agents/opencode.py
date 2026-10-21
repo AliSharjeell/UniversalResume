@@ -5,6 +5,7 @@ import secrets
 import shutil
 import sqlite3
 import string
+import sys
 
 from .. import hookkit
 from ..core import HOME, HOP_DIR, HopError, el, fmt_call, fmt_result, now_ms, run_quiet, write_json
