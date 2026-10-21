@@ -37,7 +37,10 @@ def connect(rw=False):
 
 
 def binary():
-    p = shutil.which('opencode')
+    if sys.platform == 'win32':
+        p = shutil.which('opencode.cmd') or shutil.which('opencode.exe') or shutil.which('opencode')
+    else:
+        p = shutil.which('opencode')
     if not p:
         raise HopError('opencode not found on PATH')
     exe = os.path.join(os.path.dirname(p), 'node_modules', 'opencode-ai', 'bin', 'opencode.exe')

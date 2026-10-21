@@ -239,10 +239,8 @@ class Sync:
             return 'hop mirror'
         if s.get('automation'):
             return 'automation run'
-        if sum(1 for e in els if e['role'] == 'user' and e['kind'] == 'msg') < self.cfg['min_user_messages']:
-            return 'too short'
-        if not any(e['role'] != 'user' for e in els):
-            return 'no reply yet'
+        if not els:
+            return 'empty'
         return None
 
     def adopt_new(self):
