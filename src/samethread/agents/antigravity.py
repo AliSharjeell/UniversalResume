@@ -55,9 +55,12 @@ class Antigravity(Agent):
                 uris = json.loads(ws or '[]')
             except ValueError:
                 uris = []
-            out['agy:' + cid] = self.session(cid, path=path, title=title, sig=file_sig(path),
+            file_mtime = int(os.path.getmtime(path) * 1000) if os.path.exists(path) else 0
+            db_mtime = iso_ms(modified) if modified else 0
+            updated_ts = max(db_mtime, file_mtime)
+            out['agy:' + cid] = self.session(cid, path=path, title=title or None, sig=file_sig(path),
                                              cwd=remap(cfg, uri_to_path(uris[0]) if uris else HOME),
-                                             updated=iso_ms(modified) or int(os.path.getmtime(path) * 1000))
+                                             updated=updated_ts)
         return out
 
     def read(self, s, cfg):
