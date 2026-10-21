@@ -168,6 +168,9 @@ class Claude(Agent):
     def resume_cmd(self, sid):
         return ['claude', '--resume', sid]
 
+    def seed_cmd(self, prompt):
+        return ['claude', prompt]
+
     def install(self, dry):
         return hookkit.add_json_hooks(SETTINGS, ['Stop', 'SessionEnd'], dry)
 

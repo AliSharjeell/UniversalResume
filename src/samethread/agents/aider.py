@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 
-from ..core import HOME, el, iso_ms
+from ..core import HOME, el, iso_ms, text_of
 from .base import Agent
 
 
@@ -42,9 +42,9 @@ class Aider(Agent):
                 msgs = data.get('messages') or data.get('history') or []
                 for d in msgs:
                     role = d.get('role', 'user')
-                    text = d.get('content') or d.get('text') or ''
-                    if text.strip():
-                        els.append(el(d.get('id', str(len(els))), role, text.strip(), iso_ms(d.get('timestamp'))))
+                    text = text_of(d.get('content') or d.get('text') or '')
+                    if text and text.strip():
+                        els.append(el(d.get('id') or str(len(els)), role, text.strip(), iso_ms(d.get('timestamp'))))
             elif path.endswith('.md'):
                 with open(path, 'r', encoding='utf-8', errors='replace') as f:
                     content = f.read()

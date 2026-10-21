@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import time
 
 HOME = os.path.expanduser('~')
@@ -165,7 +166,15 @@ def clip(text, n):
 
 
 def same_path(a, b):
-    return os.path.normcase(os.path.normpath(a)) == os.path.normcase(os.path.normpath(b))
+    try:
+        ra = os.path.realpath(os.path.normpath(a))
+        rb = os.path.realpath(os.path.normpath(b))
+    except Exception:
+        ra = os.path.normpath(a)
+        rb = os.path.normpath(b)
+    if sys.platform in ('darwin', 'win32'):
+        return ra.lower() == rb.lower()
+    return os.path.normcase(ra) == os.path.normcase(rb)
 
 
 def remap(cfg, path):
@@ -176,7 +185,11 @@ def remap(cfg, path):
 
 
 def el(id_, role, text, ts, kind='msg'):
-    return {'id': str(id_), 'role': role, 'text': text, 'ts': ts or 0, 'kind': kind}
+    if id_ is None or str(id_).strip() == '' or str(id_).strip() == 'None':
+        id_str = f'{role}:{ts}:{hash(text) & 0xffffffff:x}'
+    else:
+        id_str = str(id_)
+    return {'id': id_str, 'role': role, 'text': text, 'ts': ts or 0, 'kind': kind}
 
 
 def dedup(els):

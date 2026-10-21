@@ -1,4 +1,5 @@
 import React from 'react';
+import { TextAttributes } from '@opentui/core';
 import type { ThreadItem } from '../types.ts';
 
 interface ChatListProps {
@@ -23,10 +24,10 @@ export function ChatList({
   if (threads.length === 0) {
     return (
       <box flexDirection="column" padding={2} alignItems="center" justifyContent="center" flexGrow={1}>
-        <text color="#FFFFFF" bold>
+        <text fg="#FFFFFF" attributes={TextAttributes.BOLD}>
           No conversations found
         </text>
-        <text dim color="#737373" marginTop={1}>
+        <text attributes={TextAttributes.DIM} fg="#737373" marginTop={1}>
           Press Tab to switch scope, or Backspace to clear search
         </text>
       </box>
@@ -95,8 +96,8 @@ export function ChatList({
             }}
           >
             <text
-              bold={isSelected}
-              color={isSelected ? '#FFFFFF' : '#A3A3A3'}
+              attributes={isSelected ? TextAttributes.BOLD : TextAttributes.NONE}
+              fg={isSelected ? '#FFFFFF' : '#A3A3A3'}
             >
               {line}
             </text>

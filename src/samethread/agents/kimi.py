@@ -7,7 +7,8 @@ import shutil
 import uuid
 
 from .. import hookkit
-from ..core import HOME, HopError, dumps, el, file_sig, fmt_call, fmt_result, iso_ms, lp, read_json, read_jsonl, write_lines
+from ..core import (HOME, HopError, dumps, el, file_sig, fmt_call, fmt_result, iso_ms, lp, read_json,
+                    read_jsonl, text_of, write_lines)
 from .base import Agent
 
 ROOT = os.path.join(HOME, '.kimi-code')
@@ -63,7 +64,7 @@ class Kimi(Agent):
             t, ts = r.get('type'), r.get('time')
             if t == 'context.append_message':
                 m = r.get('message') or {}
-                txt = ''.join(p.get('text', '') for p in m.get('content') or [] if p.get('type') == 'text').strip()
+                txt = text_of(m.get('content') or '').strip()
                 if not txt or (m.get('origin') or {}).get('kind', 'user') != 'user':
                     continue
                 els.append(el(m.get('id') or f'm{ts}', 'user' if m.get('role') == 'user' else 'assistant', txt, ts))
@@ -159,6 +160,9 @@ class Kimi(Agent):
 
     def resume_cmd(self, sid):
         return ['kimi', '-S', sid]
+
+    def seed_cmd(self, prompt):
+        return ['kimi', prompt]
 
     def install(self, dry):
         text = open(CONFIG, encoding='utf-8').read() if os.path.exists(CONFIG) else ''

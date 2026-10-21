@@ -136,6 +136,9 @@ class Pi(Agent):
     def resume_cmd(self, sid):
         return ['pi', '--session', sid]
 
+    def seed_cmd(self, prompt):
+        return ['pi', prompt]
+
     def install(self, dry):
         src = ('// SameThread: after each Pi turn, mirror chats into the other agent CLIs.\n'
                '// Installed by `hop install`; removed by `hop uninstall`.\n' + hookkit.js_kicker(

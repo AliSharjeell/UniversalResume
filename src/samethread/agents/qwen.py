@@ -122,6 +122,9 @@ class Qwen(Agent):
     def resume_cmd(self, sid):
         return ['qwen', '--resume', sid]
 
+    def seed_cmd(self, prompt):
+        return ['qwen', prompt]
+
     def install(self, dry):
         return hookkit.add_json_hooks(os.path.join(root(), 'settings.json'), ['Stop'], dry)
 

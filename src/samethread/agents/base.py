@@ -37,7 +37,9 @@ class Agent:
         return [self.binary, sid]
 
     def seed_cmd(self, prompt):
-        """For agents hop can't write into: start a new conversation that reads the transcript first."""
+        """Start a new conversation that reads the transcript first."""
+        if self.binary:
+            return [self.binary, prompt]
         return None
 
     def install(self, dry):

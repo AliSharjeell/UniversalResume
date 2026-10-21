@@ -192,6 +192,9 @@ class OpenCode(Agent):
     def resume_cmd(self, sid):
         return ['opencode', '-s', sid]
 
+    def seed_cmd(self, prompt):
+        return ['opencode', prompt]
+
     def install(self, dry):
         src = ('// SameThread: after each OpenCode turn, mirror chats into the other agent CLIs.\n'
                '// Installed by `hop install`; removed by `hop uninstall`.\n' + hookkit.js_kicker(

@@ -226,6 +226,7 @@ class Sync:
         nt['elements'] = [dict(e) for e in th['elements'][:cp['upto']]] + [dict(e, author=tool) for e in new]
         cp['seen'] += [e['id'] for e in new]
         cp['upto'] = len(nt['elements'])
+        cp['owned'] = False
         nt['copies'][key], nt['updated'] = cp, upd
         self.threads[nt['tid']] = nt
         self.idx['copies'][key] = nt['tid']
@@ -334,20 +335,36 @@ class Sync:
                 self.save(tid)
 
 
+def is_lock_stale(path):
+    try:
+        if time.time() - os.path.getmtime(path) > 600:
+            return True
+        with open(path, 'r') as f:
+            content = f.read().strip()
+        if content:
+            pid = int(content)
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                return True
+        return False
+    except (OSError, ValueError):
+        return True
+
+
 def locked_sync(cfg, days=None, dry=False):
     os.makedirs(os.path.dirname(LOCK_PATH), exist_ok=True)
     try:
         fd = os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        try:
-            stale = time.time() - os.path.getmtime(LOCK_PATH) > 600
-        except OSError:
-            stale = True
-        if not stale:
+        if not is_lock_stale(LOCK_PATH):
             open(PENDING_PATH, 'w').close()
             log('sync already running; queued another pass')
             return None
-        os.remove(LOCK_PATH)
+        try:
+            os.remove(LOCK_PATH)
+        except OSError:
+            pass
         return locked_sync(cfg, days, dry)
     os.write(fd, str(os.getpid()).encode())
     os.close(fd)
@@ -371,9 +388,16 @@ def wait_lock(seconds=60):
     deadline = time.time() + seconds
     while True:
         try:
-            os.close(os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            fd = os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
             return True
         except FileExistsError:
+            if is_lock_stale(LOCK_PATH):
+                try:
+                    os.remove(LOCK_PATH)
+                    continue
+                except OSError:
+                    pass
             if time.time() > deadline:
                 return False
             time.sleep(0.5)

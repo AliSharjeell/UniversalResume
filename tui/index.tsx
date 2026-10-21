@@ -26,18 +26,20 @@ async function main() {
 
   const root = createRoot(renderer);
 
-  const handleLaunch = (thread: ThreadItem, agentKey: AgentKey) => {
+  const handleLaunch = async (thread: ThreadItem, agentKey: AgentKey) => {
     try {
       renderer.destroy();
+      await renderer.closed;
     } catch {
       // Ignore destroy errors
     }
     launchResume(thread, agentKey);
   };
 
-  const handleExit = () => {
+  const handleExit = async () => {
     try {
       renderer.destroy();
+      await renderer.closed;
     } catch {
       // Ignore destroy errors
     }

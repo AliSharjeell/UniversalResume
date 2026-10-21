@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ..core import HOME, el, iso_ms, read_jsonl
+from ..core import HOME, el, iso_ms, read_jsonl, text_of
 from .base import Agent
 
 
@@ -43,18 +43,18 @@ class OpenClaw(Agent):
             if path.endswith('.jsonl'):
                 for d in read_jsonl(path):
                     role = d.get('role') or 'user'
-                    text = d.get('content') or d.get('text') or ''
-                    if text.strip():
-                        els.append(el(d.get('id', str(len(els))), role, text.strip(), iso_ms(d.get('timestamp'))))
+                    text = text_of(d.get('content') or d.get('text') or '')
+                    if text and text.strip():
+                        els.append(el(d.get('id') or str(len(els)), role, text.strip(), iso_ms(d.get('timestamp'))))
             else:
                 with open(path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 msgs = data.get('messages') or data.get('history') or []
                 for d in msgs:
                     role = d.get('role', 'user')
-                    text = d.get('content') or d.get('text') or ''
-                    if text.strip():
-                        els.append(el(d.get('id', str(len(els))), role, text.strip(), iso_ms(d.get('timestamp'))))
+                    text = text_of(d.get('content') or d.get('text') or '')
+                    if text and text.strip():
+                        els.append(el(d.get('id') or str(len(els)), role, text.strip(), iso_ms(d.get('timestamp'))))
         except Exception:
             pass
         return els

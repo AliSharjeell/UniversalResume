@@ -153,6 +153,9 @@ class Codex(Agent):
     def resume_cmd(self, sid):
         return ['codex', 'resume', sid]
 
+    def seed_cmd(self, prompt):
+        return ['codex', prompt]
+
     # Codex runs hooks.json hooks only after the user reviews them, so hop uses the config-level
     # `notify` command instead: it fires after every turn and lives in the user's own config.toml.
     NOTIFY_MARK = '# samethread: sync chats after each Codex turn (managed by `hop install`)'

@@ -22,13 +22,20 @@ from .sync import detach, locked_sync, render, tag, thread_title, wait_lock
 
 
 def all_threads():
-    idx = read_json(INDEX_PATH, {})
     out = {}
+    if os.path.isdir(THREAD_DIR):
+        for fname in os.listdir(THREAD_DIR):
+            if fname.endswith('.json'):
+                th = read_json(os.path.join(THREAD_DIR, fname), None)
+                if th and 'tid' in th:
+                    out[th['tid']] = th
+    idx = read_json(INDEX_PATH, {})
     for tid in set(idx.get('copies', {}).values()):
-        th = read_json(os.path.join(THREAD_DIR, tid + '.json'), None)
-        if th:
-            out[tid] = th
-    return sorted(out.values(), key=lambda t: t['updated'], reverse=True)
+        if tid not in out:
+            th = read_json(os.path.join(THREAD_DIR, tid + '.json'), None)
+            if th:
+                out[tid] = th
+    return sorted(out.values(), key=lambda t: t.get('updated', 0), reverse=True)
 
 
 def scoped(args):
@@ -65,11 +72,12 @@ def cmd_list(args):
     for i, th in enumerate(threads[:args.limit], 1):
         muted = '  ·  not mirrored' if th.get('forgotten') or {'cc', 'oc'} <= set(th.get('suppressed', [])) else ''
         print(f'{i:>3}. {thread_title(th)}  ·  {ago(th["updated"])}{muted}' + (f'  ·  {th["cwd"]}' if args.all else ''))
-        for key, cp in sorted(th['copies'].items(), key=lambda kv: list(AGENTS).index(kv[0].split(':')[0])):
+        for key, cp in sorted(th['copies'].items(), key=lambda kv: list(AGENTS).index(kv[0].split(':')[0]) if kv[0].split(':')[0] in AGENTS else 999):
             tool, sid = key.split(':', 1)
             state = 'mirror' if cp['owned'] else 'original'
             behind = '' if cp['upto'] == len(th['elements']) else ' (behind)'
-            print(f'       {NAMES.get(tool, tool):<9} {state:<8}{behind}  {shown(AGENTS[tool].resume_cmd(sid))}')
+            cmd_str = shown(AGENTS[tool].resume_cmd(sid)) if tool in AGENTS else sid
+            print(f'       {NAMES.get(tool, tool):<9} {state:<8}{behind}  {cmd_str}')
 
 
 def seed(agent, th):
@@ -88,7 +96,10 @@ def seed(agent, th):
     prompt = (f'[hop-handoff:{th["tid"]}] We are continuing the conversation "{th["base_title"]}" that started in '
               f'{tag(th)}. Read the whole transcript at {path} with your file tool (all of it, page through if long). '
               f'Then reply with one short line saying you are ready, and wait for me.')
-    launch(agent.seed_cmd(prompt), th['cwd'])
+    cmd = agent.seed_cmd(prompt)
+    if not cmd:
+        sys.exit(f'Agent {agent.name} does not support starting a session via command line.')
+    launch(cmd, th['cwd'])
 
 
 def cmd_resume(args):

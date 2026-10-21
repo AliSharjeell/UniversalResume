@@ -198,5 +198,128 @@ class Regressions(unittest.TestCase):
         self.assertTrue(bool(sid and sig))
 
 
+class RegressionTests(unittest.TestCase):
+    def test_el_and_dedup_preserve_turns_when_id_is_none(self):
+        e1 = core.el(None, 'user', 'first message', 1000)
+        e2 = core.el(None, 'assistant', 'second message', 2000)
+        self.assertNotEqual(e1['id'], e2['id'])
+        self.assertNotEqual(e1['id'], 'None')
+        self.assertNotEqual(e2['id'], 'None')
+        deduped = core.dedup([e1, e2])
+        self.assertEqual(len(deduped), 2)
+
+    def test_same_path_handles_case_and_symlinks(self):
+        with tempfile.TemporaryDirectory() as td:
+            real_dir = os.path.join(td, "real_dir")
+            os.makedirs(real_dir)
+            symlink_dir = os.path.join(td, "symlink_dir")
+            os.symlink(real_dir, symlink_dir)
+            self.assertTrue(core.same_path(real_dir, symlink_dir))
+            self.assertTrue(core.same_path(real_dir.upper(), symlink_dir.lower()))
+
+    def test_fork_clears_owned_flag(self):
+        s = sync.Sync(CFG)
+        th = sync.new_thread('cc:orig', 'Base Thread', os.getcwd())
+        th['elements'] = [e('1', 'user', 'prompt'), e('2', 'assistant', 'reply')]
+        th['copies']['cc:orig'] = {'owned': True, 'seen': ['1', '2'], 'sig': 's1', 'upto': 2}
+        s.threads[th['tid']] = th
+        new_elements = [core.el('3', 'user', 'followup', 3000)]
+        s.fork(th, 'cc:orig', new_elements, 3000)
+        # The diverged fork must have owned=False so clean won't delete the user's active session
+        forked_tid = s.idx['copies']['cc:orig']
+        forked_thread = s.threads[forked_tid]
+        self.assertFalse(forked_thread['copies']['cc:orig']['owned'])
+
+    def test_all_threads_reads_unindexed_threads_from_disk(self):
+        from samethread import cli
+        unindexed_tid = 'unindexed_test_thread'
+        th_data = {
+            'tid': unindexed_tid,
+            'base_title': 'Unindexed Chat',
+            'cwd': os.getcwd(),
+            'updated': 123456789,
+            'elements': [],
+            'copies': {}
+        }
+        th_path = os.path.join(core.THREAD_DIR, f'{unindexed_tid}.json')
+        core.write_json(th_path, th_data)
+        try:
+            threads = cli.all_threads()
+            self.assertTrue(any(t['tid'] == unindexed_tid for t in threads))
+        finally:
+            if os.path.exists(th_path):
+                os.remove(th_path)
+
+    def test_wait_lock_reclaims_stale_pid_without_hanging(self):
+        # Create a lockfile with a dead PID (e.g. 99999999)
+        os.makedirs(os.path.dirname(core.LOCK_PATH), exist_ok=True)
+        with open(core.LOCK_PATH, 'w') as f:
+            f.write('99999999')
+        # wait_lock should detect the dead PID and acquire lock immediately without waiting 60s
+        acquired = sync.wait_lock(seconds=2)
+        self.assertTrue(acquired)
+        if os.path.exists(core.LOCK_PATH):
+            os.remove(core.LOCK_PATH)
+
+    def test_writable_agents_provide_seed_cmd(self):
+        for key in ('claude', 'codex', 'opencode', 'qwen', 'kimi', 'pi'):
+            agent = AGENTS[resolve(key)]
+            cmd = agent.seed_cmd('continue conversation')
+            self.assertIsNotNone(cmd, f'Agent {key} returned None for seed_cmd')
+            self.assertIsInstance(cmd, list)
+            self.assertIn('continue conversation', ' '.join(cmd))
+
+    def test_openhands_seed_cmd_uses_t_flag(self):
+        agent = AGENTS['openhands']
+        cmd = agent.seed_cmd('continue conversation')
+        self.assertIn('-t', cmd)
+
+    def test_adapters_parse_list_content_and_none_id(self):
+        # Deepseek, Grok, Hermes, OpenClaw, OpenHands, Cursor, Kimi
+        with tempfile.TemporaryDirectory() as td:
+            # Test deepseek json format with list content and None id
+            ds_path = os.path.join(td, 'deepseek.json')
+            with open(ds_path, 'w') as f:
+                json.dump({
+                    'messages': [
+                        {'id': None, 'role': 'user', 'content': [{'type': 'text', 'text': 'hello deepseek'}]},
+                        {'id': None, 'role': 'assistant', 'content': [{'type': 'text', 'text': 'reply deepseek'}]}
+                    ]
+                }, f)
+            els = AGENTS['deepseek'].read({'path': ds_path}, CFG)
+            self.assertEqual(len(els), 2)
+            self.assertEqual(els[0]['text'], 'hello deepseek')
+            self.assertEqual(els[1]['text'], 'reply deepseek')
+            self.assertNotEqual(els[0]['id'], els[1]['id'])
+
+            # Test kimi with string content in context.append_message
+            kimi_path = os.path.join(td, 'kimi_wire.jsonl')
+            with open(kimi_path, 'w') as f:
+                f.write(json.dumps({
+                    'type': 'context.append_message',
+                    'time': 1000,
+                    'message': {
+                        'id': 'm1',
+                        'role': 'user',
+                        'content': 'kimi prompt string',
+                        'origin': {'kind': 'user'}
+                    }
+                }) + '\n')
+            k_els = AGENTS['kimi'].read({'path': kimi_path}, CFG)
+            self.assertEqual(len(k_els), 1)
+            self.assertEqual(k_els[0]['text'], 'kimi prompt string')
+
+    def test_cmd_list_handles_unknown_agent_key(self):
+        from samethread import cli
+        import io
+        from unittest.mock import patch
+        th = thread([e('1', 'user', 'test')])
+        th['copies']['unknown_tool:123'] = {'owned': True, 'seen': ['1'], 'sig': 's1', 'upto': 1}
+        args = type('Args', (), {'all': True, 'limit': 10})()
+        with patch('samethread.cli.scoped', return_value=[th]), patch('sys.stdout', new=io.StringIO()):
+            # Must not raise ValueError: list.index(x): x not in list
+            cli.cmd_list(args)
+
+
 if __name__ == '__main__':
     unittest.main()
