@@ -45,7 +45,7 @@ def binary():
     if not p:
         raise HopError('opencode not found on PATH')
     exe = os.path.join(os.path.dirname(p), 'node_modules', 'opencode-ai', 'bin', 'opencode.exe')
-    return exe if os.path.exists(exe) else p
+    return exe if os.path.exists(exe) and os.path.getsize(exe) > 1024 else p
 
 
 def sig(c, sid):
