@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -229,6 +230,83 @@ class MiniMaxNativeCopy(unittest.TestCase):
                     continue
                 msg = json.loads(line)['message']
                 self.assertIsInstance(msg.get('timestamp'), (int, float), 'the runtime rejects a missing timestamp')
+
+
+class AntigravityNativeCopy(unittest.TestCase):
+    """Antigravity copies must write summaries, trajectory dbs, and support in-place updates."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix='hop-agy-')
+        from samethread.agents import antigravity
+        self.saved_root = antigravity.ROOT
+        antigravity.ROOT = self.tmp
+        os.makedirs(os.path.join(self.tmp, 'conversations'), exist_ok=True)
+        import sqlite3
+        db = os.path.join(self.tmp, 'conversation_summaries.db')
+        c = sqlite3.connect(db)
+        c.execute('CREATE TABLE `conversation_summaries` (`conversation_id` text,`title` text NOT NULL DEFAULT "",'
+                  '`preview` text NOT NULL DEFAULT "",`step_count` integer NOT NULL DEFAULT 0,`last_modified_time` datetime NOT NULL,'
+                  '`workspace_uris` text NOT NULL,`status` text NOT NULL DEFAULT "",`source` text NOT NULL DEFAULT "",'
+                  '`project_id` text NOT NULL DEFAULT "",`agent_name` text NOT NULL DEFAULT "",`parent_conversation_id` text NOT NULL DEFAULT "",'
+                  '`nesting_depth` integer NOT NULL DEFAULT 0,`battle_id` text NOT NULL DEFAULT "",`winning_conversation_id` text NOT NULL DEFAULT "",'
+                  '`not_fully_idle` numeric NOT NULL DEFAULT false,`killed` numeric NOT NULL DEFAULT false,`last_user_input_time` datetime NOT NULL,'
+                  '`last_user_input_step_index` integer NOT NULL DEFAULT -1,`app_data_dir` text NOT NULL DEFAULT "", raw_summary BLOB, group_id TEXT NOT NULL DEFAULT "",'
+                  'PRIMARY KEY (`conversation_id`))')
+        c.commit()
+        c.close()
+
+    def tearDown(self):
+        from samethread.agents import antigravity
+        antigravity.ROOT = self.saved_root
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_write_and_update_native_copy(self):
+        import sqlite3
+        agent = AGENTS['agy']
+        cwd = os.getcwd()
+        res = agent.write(None, cwd, MSGS, 'CI is red', {'cfg': CFG})
+        self.assertIsNotNone(res['id'])
+        cid = res['id']
+
+        # Check summary row
+        db = os.path.join(self.tmp, 'conversation_summaries.db')
+        c = sqlite3.connect(db)
+        c.row_factory = sqlite3.Row
+        row = c.execute('select * from conversation_summaries where conversation_id=?', (cid,)).fetchone()
+        self.assertEqual(row['title'], 'CI is red')
+        self.assertEqual(row['status'], 'CASCADE_RUN_STATUS_IDLE')
+        uris = json.loads(row['workspace_uris'])
+        self.assertIsInstance(uris, list)
+        self.assertTrue(uris[0].startswith('file:///'))
+        c.close()
+
+        # Check trajectory db
+        conv_db = os.path.join(self.tmp, 'conversations', cid + '.db')
+        c = sqlite3.connect(conv_db)
+        meta = c.execute('select * from trajectory_meta').fetchall()
+        self.assertEqual(len(meta), 1)
+        meta_blob = c.execute('select * from trajectory_metadata_blob').fetchall()
+        self.assertEqual(len(meta_blob), 1)
+        c.close()
+
+        # Update existing copy
+        more_msgs = MSGS + [{'role': 'user', 'text': 'another question', 'ts': 1790000002000}]
+        res2 = agent.write(res, cwd, more_msgs, 'CI is red (Updated)', {'cfg': CFG})
+        self.assertEqual(res2['id'], cid)
+
+        c = sqlite3.connect(db)
+        c.row_factory = sqlite3.Row
+        row2 = c.execute('select * from conversation_summaries where conversation_id=?', (cid,)).fetchone()
+        self.assertEqual(row2['title'], 'CI is red (Updated)')
+        c.close()
+
+        # Delete copy
+        agent.delete(res2)
+        c = sqlite3.connect(db)
+        row3 = c.execute('select * from conversation_summaries where conversation_id=?', (cid,)).fetchone()
+        self.assertIsNone(row3)
+        c.close()
+        self.assertFalse(os.path.exists(conv_db))
 
 
 class HopResumeNativeCopy(unittest.TestCase):

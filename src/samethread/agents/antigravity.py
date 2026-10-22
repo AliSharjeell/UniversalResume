@@ -58,8 +58,9 @@ def uri_to_path(u):
 
 
 def workspace_uri(cwd):
-    """How agy records a workspace: file:///<drive>:<path>, escaped."""
-    return 'file:///' + urllib.parse.quote((cwd or '').replace('\\', '/'), safe='/')
+    """How agy records a workspace: file:///<path>."""
+    norm = (cwd or '').replace('\\', '/').rstrip('/')
+    return 'file:///' + norm
 
 
 def stamp(ms):
@@ -96,7 +97,7 @@ class Antigravity(Agent):
             try:
                 uris = json.loads(ws or '[]')
             except ValueError:
-                uris = []
+                uris = [ws] if ws and ws.startswith('file://') else []
             file_mtime = int(os.path.getmtime(path) * 1000) if os.path.exists(path) else 0
             db_mtime = iso_ms(modified) if modified else 0
             updated_ts = max(db_mtime, file_mtime)
@@ -151,8 +152,8 @@ class Antigravity(Agent):
         for name in ('transcript_full.jsonl', 'transcript.jsonl'):
             write_text(os.path.join(logs, name), body)
 
-        self.write_trajectory(cid, msgs, cwd)
-        self.write_summary(cid, cwd, steps, msgs)
+        traj_id, meta_fields = self.write_trajectory(cid, msgs, cwd)
+        self.write_summary(cid, cwd, steps, msgs, title, traj_id, meta_fields)
         path = transcript(cid)
         return {'id': cid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
 
@@ -165,13 +166,30 @@ class Antigravity(Agent):
         rewrites the message, the ids and the time.
         """
         path = os.path.join(ROOT, 'conversations', cid + '.db')
+        os.makedirs(lp(os.path.dirname(path)), exist_ok=True)
         c = sqlite3.connect(path, timeout=20)
         try:
             for sql in TRAJECTORY_SCHEMA:
-                c.execute(sql)
+                c.execute(sql.replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS'))
+            c.execute('delete from steps')
+            c.execute('delete from trajectory_meta')
+            c.execute('delete from trajectory_metadata_blob')
+
             trajectory_id = str(uuid.uuid4())
             c.execute('insert into trajectory_meta (trajectory_id, cascade_id, trajectory_type, source) '
-                      'values (?,?,?,?)', (trajectory_id, cid, 4, 0))
+                      'values (?,?,?,?)', (trajectory_id, cid, 4, 17))
+
+            ws_uri = workspace_uri(cwd)
+            meta_fields = [
+                [1, 2, encode([[1, 2, ws_uri.encode('utf-8')]])],
+                [3, 2, str(uuid.uuid4()).encode('utf-8')],
+                [6, 2, cid.encode('utf-8')],
+                [7, 2, ws_uri.encode('utf-8')],
+                [18, 2, b'default-cli-project'],
+            ]
+            c.execute('insert into trajectory_metadata_blob (id, data) values (?,?)',
+                      ('main', encode(meta_fields)))
+
             user_tpl, planner_tpl = self.step_templates()
             if user_tpl and planner_tpl:
                 for idx, m in enumerate(msgs):
@@ -183,6 +201,7 @@ class Antigravity(Agent):
                     c.execute('insert into steps (idx, step_type, status, step_payload) values (?,?,?,?)',
                               (idx, USER_STEP if is_user else PLANNER_STEP, STEP_STATUS_DONE, payload))
             c.commit()
+            return trajectory_id, meta_fields
         finally:
             c.close()
 
@@ -250,7 +269,7 @@ class Antigravity(Agent):
         except Exception:
             return None
 
-    def write_summary(self, cid, cwd, steps, msgs):
+    def write_summary(self, cid, cwd, steps, msgs, title=None, trajectory_id=None, meta_fields=None):
         """The summary row that puts the conversation in agy's own list."""
         db = os.path.join(ROOT, 'conversation_summaries.db')
         if not os.path.exists(db):
@@ -258,15 +277,33 @@ class Antigravity(Agent):
         last = max((m['ts'] for m in msgs), default=0)
         preview = next((m['text'] for m in msgs if m['role'] == 'user'), '')
         user_step = max((s['step_index'] for s in steps if s['type'] == 'USER_INPUT'), default=-1)
+        ws_uri = workspace_uri(cwd)
+        summary_title = title or preview.strip()[:120]
+
+        raw_summary = None
+        if trajectory_id and meta_fields:
+            try:
+                summary_fields = [
+                    [1, 2, summary_title.encode('utf-8')],
+                    [4, 2, trajectory_id.encode('utf-8')],
+                    [9, 2, encode([[1, 2, ws_uri.encode('utf-8')]])],
+                    [15, 2, summary_title.encode('utf-8')],
+                    [17, 2, encode(meta_fields)],
+                ]
+                raw_summary = encode(summary_fields)
+            except Exception:
+                raw_summary = None
+
         c = sqlite3.connect(db, timeout=20)
         try:
             c.execute('pragma busy_timeout=20000')
             c.execute('insert or replace into conversation_summaries (conversation_id, title, preview, step_count, '
                       'last_modified_time, workspace_uris, status, source, project_id, agent_name, '
                       'parent_conversation_id, nesting_depth, last_user_input_time, last_user_input_step_index, '
-                      'app_data_dir) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                      (cid, '', preview.strip()[:120], len(steps), db_stamp(last), workspace_uri(cwd), '', '', '', '',
-                       '', 0, db_stamp(last), user_step, 'antigravity'))
+                      'app_data_dir, raw_summary) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                      (cid, summary_title, preview.strip()[:120], len(steps), db_stamp(last),
+                       json.dumps([ws_uri]), 'CASCADE_RUN_STATUS_IDLE', '', 'default-cli-project', '',
+                       '', 0, db_stamp(last), user_step, 'antigravity-cli', raw_summary))
             c.commit()
         finally:
             c.close()
