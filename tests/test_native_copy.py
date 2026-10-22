@@ -98,5 +98,35 @@ class GrokNativeCopy(unittest.TestCase):
         self.assertEqual(sorted(e['id'] for e in els), sorted(res['seen']))
 
 
+class AiderNativeCopy(unittest.TestCase):
+    """Aider restores from a markdown chat history, so the copy is written in that shape."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp(prefix='hop-aider-')
+        os.environ['AIDER_HOME'] = self.root
+        self.project = tempfile.mkdtemp(prefix='hop-project-')
+
+    def test_copy_is_aider_chat_history_and_reads_back_cleanly(self):
+        agent = AGENTS['aider']
+        res = agent.write(None, self.project, MSGS, 'CI is red', {'cfg': CFG})
+
+        self.assertTrue(res['path'].endswith('.md'))
+        with open(res['path'], encoding='utf-8') as f:
+            body = f.read()
+        self.assertIn('#### User', body)
+        self.assertIn('#### Assistant', body)
+
+        sessions = agent.list(CFG)
+        self.assertIn(f'aider:{res["id"]}', sessions)
+        els = agent.read(sessions[f'aider:{res["id"]}'], CFG)
+        self.assertEqual([e['role'] for e in els], ['user', 'assistant'])
+        self.assertEqual([e['text'] for e in els], ['why is CI red?', 'looking into it'])
+
+    def test_project_folder_gets_the_history_aider_restores(self):
+        agent = AGENTS['aider']
+        agent.write(None, self.project, MSGS, 'CI is red', {'cfg': CFG})
+        self.assertTrue(os.path.exists(os.path.join(self.project, '.aider.chat.history.md')))
+
+
 if __name__ == '__main__':
     unittest.main()

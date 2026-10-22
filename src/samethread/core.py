@@ -105,6 +105,17 @@ def write_lines(path, lines, mtime_ms=None):
         os.utime(lp(path), (mtime_ms / 1000, mtime_ms / 1000))
 
 
+def write_text(path, text, mtime_ms=None):
+    """Atomically write raw text (not JSON), then stamp it with the chat's real last activity."""
+    os.makedirs(lp(os.path.dirname(path)), exist_ok=True)
+    tmp = path + '.hoptmp'
+    with open(lp(tmp), 'w', encoding='utf-8', newline='\n') as f:
+        f.write(text)
+    os.replace(lp(tmp), lp(path))
+    if mtime_ms:
+        os.utime(lp(path), (mtime_ms / 1000, mtime_ms / 1000))
+
+
 def append_line(path, obj):
     with open(lp(path), 'a', encoding='utf-8', newline='\n') as f:
         f.write(dumps(obj) + '\n')

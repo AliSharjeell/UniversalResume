@@ -4,8 +4,8 @@ import os
 import re
 import shutil
 
-from ..core import HOME, el, iso_ms, text_of
-from .base import Agent
+from ..core import HOME, el, file_sig, iso_ms, lp, text_of, write_text
+from .base import Agent, new_id
 
 
 def root():
@@ -13,7 +13,7 @@ def root():
 
 
 class Aider(Agent):
-    key, name, aliases, binary, writable = 'aider', 'Aider', ('aider-chat',), 'aider', False
+    key, name, aliases, binary, writable, copyable = 'aider', 'Aider', ('aider-chat',), 'aider', False, True
 
     def detect(self):
         return bool(shutil.which('aider') or os.path.isdir(root()))
@@ -53,13 +53,43 @@ class Aider(Agent):
                     part = part.strip()
                     if not part:
                         continue
-                    role = 'assistant' if part.startswith('> ') or 'assistant' in part[:20].lower() else 'user'
-                    text = re.sub(r'^#{1,4}\s*', '', part).strip()
-                    if text:
-                        els.append(el(str(len(els)), role, text, 0))
+                    # The heading names the speaker; the rest of the heading line is not content.
+                    head = re.match(r'^#{1,4}\s*(.*)$', part.split('\n', 1)[0])
+                    label = (head.group(1).strip().lower() if head else '')
+                    role = 'assistant' if label.startswith('assistant') else 'user'
+                    body = re.sub(r'^#{1,4}\s*[^\n]*\n?', '', part, count=1).strip()
+                    if body:
+                        els.append(el(str(len(els)), role, body, 0))
         except Exception:
             pass
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes an Aider chat history Aider restores itself.
+
+        Aider restores with `--restore-chat-history`, which reads .aider.chat.history.md from
+        the project folder, so the copy is written there as well as into Aider's own chat store.
+        """
+        sid = cp['id'] if cp else new_id()
+        base = os.path.join(root(), 'chats')
+        os.makedirs(lp(base), exist_ok=True)
+        path = os.path.join(base, sid + '.md')
+        body = []
+        for m in msgs:
+            who = 'User' if m['role'] == 'user' else 'Assistant'
+            body.append(f'#### {who}\n\n{m["text"]}\n')
+        text = '\n'.join(body)
+        last = max((m['ts'] for m in msgs), default=0)
+        write_text(path, text, last)
+        try:
+            write_text(os.path.join(cwd, '.aider.chat.history.md'), text, last)
+        except OSError:
+            pass
+        return {'id': sid, 'path': path, 'seen': [str(i) for i in range(len(msgs))], 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         return ['aider', '--restore-chat-history']
