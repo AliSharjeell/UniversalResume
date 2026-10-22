@@ -1,17 +1,44 @@
-"""Antigravity CLI (agy): read-only. Conversations are runtime-owned protobuf; hop reads the transcript log."""
+"""Antigravity CLI (agy): conversations live in ~/.gemini/antigravity-cli.
+
+A conversation is a brain folder with the transcript log, a trajectory database under
+conversations/, and a row in conversation_summaries. hop writes all three, so agy resumes
+the copy itself instead of being seeded with a handoff prompt.
+"""
+import datetime as dt
 import json
 import os
 import re
+import shutil
 import sqlite3
 import urllib.parse
+import uuid
 
 from .. import hookkit
-from ..core import HOME, el, file_sig, fmt_call, fmt_result, iso_ms, read_jsonl, remap
+from ..core import HOME, el, file_sig, fmt_call, fmt_result, iso_ms, lp, read_jsonl, remap, write_text
+from ..proto import decode, drop_field, encode, set_field, sub
 from .base import Agent
 
 ROOT = os.path.join(HOME, '.gemini', 'antigravity-cli')
 HOOKS = os.path.join(HOME, '.gemini', 'config', 'hooks.json')
 HDR_RE = re.compile(r'^(Created At|Completed At):.*\n?', re.M)
+
+USER_STEP = 14        # step_type of a user message
+PLANNER_STEP = 15     # step_type of an agent message
+STEP_STATUS_DONE = 3
+
+TRAJECTORY_SCHEMA = [
+    'CREATE TABLE `trajectory_meta` (`trajectory_id` text,`cascade_id` text,`trajectory_type` integer,'
+    '`source` integer,PRIMARY KEY (`trajectory_id`))',
+    'CREATE TABLE `steps` (`idx` integer,`step_type` integer NOT NULL DEFAULT 0,`status` integer NOT NULL DEFAULT 0,'
+    '`has_subtrajectory` numeric NOT NULL DEFAULT false,`metadata` blob,`error_details` blob,`permissions` blob,'
+    '`task_details` blob,`render_info` blob,`step_payload` blob,`step_format` integer NOT NULL DEFAULT 0,'
+    'PRIMARY KEY (`idx`))',
+    'CREATE TABLE `gen_metadata` (`idx` integer,`data` blob,`size` integer NOT NULL DEFAULT 0,PRIMARY KEY (`idx`))',
+    'CREATE TABLE `executor_metadata` (`idx` integer,`data` blob,PRIMARY KEY (`idx`))',
+    'CREATE TABLE `parent_references` (`idx` integer,`data` blob,PRIMARY KEY (`idx`))',
+    'CREATE TABLE `trajectory_metadata_blob` (`id` text DEFAULT "main",`data` blob,PRIMARY KEY (`id`))',
+    'CREATE TABLE `battle_mode_infos` (`idx` integer,`data` blob,PRIMARY KEY (`idx`))',
+]
 
 
 def transcript(cid):
@@ -30,8 +57,23 @@ def uri_to_path(u):
     return os.path.normpath(p)
 
 
+def workspace_uri(cwd):
+    """How agy records a workspace: file:///<drive>:<path>, escaped."""
+    return 'file:///' + urllib.parse.quote((cwd or '').replace('\\', '/'), safe='/')
+
+
+def stamp(ms):
+    t = dt.datetime.fromtimestamp((ms or 0) / 1000, dt.timezone.utc)
+    return t.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def db_stamp(ms):
+    t = dt.datetime.fromtimestamp((ms or 0) / 1000, dt.timezone.utc)
+    return t.strftime('%Y-%m-%d %H:%M:%S.%f000+00:00')
+
+
 class Antigravity(Agent):
-    key, name, aliases, binary, writable = 'agy', 'Agy', ('antigravity',), 'agy', False
+    key, name, aliases, binary, writable, copyable = 'agy', 'Agy', ('antigravity',), 'agy', False, True
 
     def detect(self):
         return os.path.isdir(ROOT) or super().detect()
@@ -87,6 +129,168 @@ class Antigravity(Agent):
             elif d.get('source') == 'MODEL':
                 els.append(el(idx, 'tool', fmt_result(HDR_RE.sub('', content).strip() or d.get('error'), cfg), ts))
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes an Antigravity conversation agy resumes itself."""
+        cid = cp['id'] if cp else str(uuid.uuid4())
+        logs = os.path.join(ROOT, 'brain', cid, '.system_generated', 'logs')
+        os.makedirs(lp(logs), exist_ok=True)
+        steps, seen = [], []
+        for m in msgs:
+            idx = len(steps)
+            if m['role'] == 'user':
+                steps.append({'step_index': idx, 'source': 'USER_EXPLICIT', 'type': 'USER_INPUT',
+                              'status': 'DONE', 'created_at': stamp(m['ts']),
+                              'content': f'<USER_REQUEST>\n{m["text"]}\n</USER_REQUEST>'})
+                seen.append(str(idx))
+            else:
+                steps.append({'step_index': idx, 'source': 'MODEL', 'type': 'PLANNER_RESPONSE',
+                              'status': 'DONE', 'created_at': stamp(m['ts']), 'content': m['text']})
+                seen.append(f'{idx}#0')
+        body = ''.join(json.dumps(s, ensure_ascii=False) + '\n' for s in steps)
+        for name in ('transcript_full.jsonl', 'transcript.jsonl'):
+            write_text(os.path.join(logs, name), body)
+
+        self.write_trajectory(cid, msgs, cwd)
+        self.write_summary(cid, cwd, steps, msgs)
+        path = transcript(cid)
+        return {'id': cid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def write_trajectory(self, cid, msgs, cwd):
+        """The conversation database agy opens the trajectory from.
+
+        The trajectory is what the agent's context is built from, so the chat has to be in
+        there, not just in the transcript log. The step payloads are protobuf, so hop takes
+        a real step of each kind from an existing conversation as the shape to copy and
+        rewrites the message, the ids and the time.
+        """
+        path = os.path.join(ROOT, 'conversations', cid + '.db')
+        c = sqlite3.connect(path, timeout=20)
+        try:
+            for sql in TRAJECTORY_SCHEMA:
+                c.execute(sql)
+            trajectory_id = str(uuid.uuid4())
+            c.execute('insert into trajectory_meta (trajectory_id, cascade_id, trajectory_type, source) '
+                      'values (?,?,?,?)', (trajectory_id, cid, 4, 0))
+            user_tpl, planner_tpl = self.step_templates()
+            if user_tpl and planner_tpl:
+                for idx, m in enumerate(msgs):
+                    is_user = m['role'] == 'user'
+                    tpl = user_tpl if is_user else planner_tpl
+                    payload = self.rewrite_step(tpl, m['text'], m['ts'], cid, trajectory_id, cwd, is_user)
+                    if payload is None:
+                        break
+                    c.execute('insert into steps (idx, step_type, status, step_payload) values (?,?,?,?)',
+                              (idx, USER_STEP if is_user else PLANNER_STEP, STEP_STATUS_DONE, payload))
+            c.commit()
+        finally:
+            c.close()
+
+    def step_templates(self):
+        """A real user step and a real agent step to copy the shape of."""
+        convs = os.path.join(ROOT, 'conversations')
+        if not os.path.isdir(convs):
+            return None, None
+        user_tpl = planner_tpl = None
+        for name in sorted(os.listdir(convs)):
+            if not name.endswith('.db'):
+                continue
+            try:
+                c = sqlite3.connect(f'file:{os.path.join(convs, name)}?mode=ro', uri=True, timeout=5)
+                rows = c.execute('select step_type, step_payload from steps').fetchall()
+                c.close()
+            except Exception:
+                continue
+            for stype, payload in rows:
+                if not payload:
+                    continue
+                if stype == USER_STEP and user_tpl is None:
+                    user_tpl = bytes(payload)
+                elif stype == PLANNER_STEP and planner_tpl is None:
+                    planner_tpl = bytes(payload)
+            if user_tpl and planner_tpl:
+                break
+        return user_tpl, planner_tpl
+
+    def rewrite_step(self, template, text, ts, cid, trajectory_id, cwd, is_user):
+        """Copy a real step and put this message, these ids and this time into it."""
+        try:
+            fields = decode(template)
+            body_field = 19 if is_user else 20
+            body = sub(fields, body_field)
+            if not body:
+                return None
+            if is_user:
+                set_field(body, 2, text.encode('utf-8'))
+                set_field(body, 3, ('\nJ' + text).encode('utf-8'))
+            else:
+                set_field(body, 1, text.encode('utf-8'))
+                set_field(body, 8, text.encode('utf-8'))
+                body = drop_field(body, 7)  # a plain reply carries no tool calls
+            place = sub(body, 12)
+            if place:
+                set_field(place, 12, workspace_uri(cwd).encode('utf-8'))
+                set_field(body, 12, encode(place))
+            set_field(fields, body_field, encode(body))
+
+            meta = sub(fields, 5)
+            if meta:
+                ident = sub(meta, 20)
+                if ident:
+                    set_field(ident, 1, trajectory_id.encode('utf-8'))
+                    set_field(ident, 4, cid.encode('utf-8'))
+                    set_field(meta, 20, encode(ident))
+                when = sub(meta, 1)
+                if when:
+                    set_field(when, 1, int(ts // 1000), wire=0)
+                    set_field(when, 2, int((ts % 1000) * 1_000_000), wire=0)
+                    set_field(meta, 1, encode(when))
+                set_field(fields, 5, encode(meta))
+            return encode(fields)
+        except Exception:
+            return None
+
+    def write_summary(self, cid, cwd, steps, msgs):
+        """The summary row that puts the conversation in agy's own list."""
+        db = os.path.join(ROOT, 'conversation_summaries.db')
+        if not os.path.exists(db):
+            raise RuntimeError(f'Antigravity conversation store not found at {db}')
+        last = max((m['ts'] for m in msgs), default=0)
+        preview = next((m['text'] for m in msgs if m['role'] == 'user'), '')
+        user_step = max((s['step_index'] for s in steps if s['type'] == 'USER_INPUT'), default=-1)
+        c = sqlite3.connect(db, timeout=20)
+        try:
+            c.execute('pragma busy_timeout=20000')
+            c.execute('insert or replace into conversation_summaries (conversation_id, title, preview, step_count, '
+                      'last_modified_time, workspace_uris, status, source, project_id, agent_name, '
+                      'parent_conversation_id, nesting_depth, last_user_input_time, last_user_input_step_index, '
+                      'app_data_dir) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                      (cid, '', preview.strip()[:120], len(steps), db_stamp(last), workspace_uri(cwd), '', '', '', '',
+                       '', 0, db_stamp(last), user_step, 'antigravity'))
+            c.commit()
+        finally:
+            c.close()
+
+    def delete(self, cp):
+        cid = cp.get('id')
+        if not cid:
+            return
+        db = os.path.join(ROOT, 'conversation_summaries.db')
+        if os.path.exists(db):
+            try:
+                c = sqlite3.connect(db, timeout=20)
+                try:
+                    c.execute('pragma busy_timeout=20000')
+                    c.execute('delete from conversation_summaries where conversation_id=?', (cid,))
+                    c.commit()
+                finally:
+                    c.close()
+            except Exception:
+                pass
+        shutil.rmtree(lp(os.path.join(ROOT, 'brain', cid)), ignore_errors=True)
+        conv = os.path.join(ROOT, 'conversations', cid + '.db')
+        if os.path.exists(lp(conv)):
+            os.remove(lp(conv))
 
     def resume_cmd(self, sid):
         return ['agy', '--conversation', sid]
