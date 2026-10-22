@@ -17,8 +17,8 @@ import sys
 
 from . import __version__
 from .agents import AGENTS, NAMES, resolve, targets
-from .core import (HANDOFF_DIR, HOP_DIR, INDEX_PATH, LOCK_PATH, THREAD_DIR, ago, load_config, now_ms, read_json, same_path,
-                   settings, write_json)
+from .core import (HANDOFF_DIR, HOP_DIR, INDEX_PATH, LOCK_PATH, THREAD_DIR, ago, load_config, log, now_ms, read_json,
+                   same_path, settings, write_json)
 from .sync import detach, locked_sync, render, tag, thread_title, wait_lock
 
 
@@ -145,17 +145,17 @@ def cmd_resume(args):
     if copies:
         best = max(copies, key=lambda k: (th['copies'][k]['upto'], th['copies'][k]['owned']))
         launch(agent.resume_cmd(best.split(':', 1)[1]), th['cwd'])
-    if agent.writable:
+    if agent.can_copy and not getattr(args, 'handoff', False):
         try:
             cfg = load_config()
-            res = agent.write(None, th['cwd'], render(th, cfg), thread_title(th), {})
+            res = agent.write(None, th['cwd'], render(th, cfg), thread_title(th), {'cfg': cfg})
             if res:
                 sid, seen, sig = res['id'], res['seen'], res['sig']
                 th['copies'][f'{key}:{sid}'] = {'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
                 write_json(os.path.join(THREAD_DIR, th['tid'] + '.json'), th)
                 launch(agent.resume_cmd(sid), th['cwd'])
-        except Exception:
-            pass
+        except Exception as e:
+            log(f'! {agent.name} native copy failed for "{th["base_title"]}": {e}')
     seed(agent, th)
 
 
@@ -279,12 +279,14 @@ def main():
     p.set_defaults(fn=cmd_sync)
 
     for name, fn, hlp in (('list', cmd_list, 'show chats for this folder and how to resume them'),
-                          ('resume', cmd_resume, 'open a chat in any agent (seeds a new one where hop cannot write)'),
+                          ('resume', cmd_resume, 'open a chat in any agent (native copy, seeded handoff only as a fallback)'),
                           ('agy', cmd_resume, 'shortcut for: hop resume agy'),
                           ('forget', cmd_forget, "delete a chat's mirrors and stop mirroring it")):
         p = sub.add_parser(name, help=hlp)
         if name == 'resume':
             p.add_argument('agent', help=f'{", ".join(AGENTS)} (or the full name)')
+            p.add_argument('--handoff', action='store_true',
+                           help='skip the native copy and seed a new conversation instead')
         if name == 'agy':
             p.set_defaults(agent='agy')
         if name != 'list':
