@@ -1,4 +1,5 @@
 """Native copies: hop writes the chat into an agent's own store, and the agent reads it back."""
+import argparse
 import json
 import os
 import tempfile
@@ -60,11 +61,12 @@ class FileStoreNativeCopy(unittest.TestCase):
                 self.assertFalse(os.path.exists(path))
 
     def test_every_agent_that_advertises_a_copy_can_actually_write_one(self):
+        from samethread.agents.base import Agent
         for key, agent in AGENTS.items():
             if not agent.can_copy:
                 continue
             with self.subTest(agent=key):
-                self.assertNotEqual(type(agent).write, type(AGENTS['agy']).write,
+                self.assertNotEqual(type(agent).write, Agent.write,
                                     f'{key} claims it can copy but has no writer')
 
 
@@ -227,6 +229,73 @@ class MiniMaxNativeCopy(unittest.TestCase):
                     continue
                 msg = json.loads(line)['message']
                 self.assertIsInstance(msg.get('timestamp'), (int, float), 'the runtime rejects a missing timestamp')
+
+
+class HopResumeNativeCopy(unittest.TestCase):
+    """A hop has to write the copy and then launch the agent's own resume command."""
+
+    def setUp(self):
+        from samethread import cli
+        self.cli = cli
+        self.dir = tempfile.mkdtemp(prefix='hop-resume-')
+        self.saved = (cli.THREAD_DIR, cli.launch, cli.load_config)
+        cli.THREAD_DIR = self.dir
+        self.launched = []
+        cli.launch = lambda cmd, cwd: self.launched.append((cmd, cwd))
+        cli.load_config = lambda: dict(CFG)
+        self.thread = {
+            'tid': 'abcd1234abcd', 'base_title': 'CI is red', 'title': 'CI is red (Codex)',
+            'cwd': os.getcwd(), 'origin': 'codex:1', 'updated': 1790000000000,
+            'elements': [{'id': '0', 'role': 'user', 'text': 'why is CI red?', 'author': 'codex',
+                          'kind': 'msg', 'ts': 1790000000000},
+                         {'id': '1', 'role': 'assistant', 'text': 'looking into it', 'author': 'codex',
+                          'kind': 'msg', 'ts': 1790000001000}],
+            'copies': {}, 'suppressed': [],
+        }
+        with open(os.path.join(self.dir, self.thread['tid'] + '.json'), 'w', encoding='utf-8') as f:
+            json.dump(self.thread, f)
+
+    def tearDown(self):
+        cli = self.cli
+        cli.THREAD_DIR, cli.launch, cli.load_config = self.saved
+
+    def test_resume_copies_natively_and_launches_the_native_resume_command(self):
+        os.environ['CURSOR_HOME'] = tempfile.mkdtemp(prefix='hop-cursor-')
+        args = argparse.Namespace(agent='cursor', query=None, all=False, handoff=False)
+        try:
+            self.cli.cmd_resume(args)
+        except SystemExit:
+            pass
+        self.assertTrue(self.launched, 'the hop must launch the agent')
+        cmd, cwd = self.launched[0]
+        self.assertTrue(any('resume' in part for part in cmd), 'the hop must use the agent native resume command')
+        self.assertEqual(cwd, os.getcwd())
+
+        th = json.load(open(os.path.join(self.dir, self.thread['tid'] + '.json'), encoding='utf-8'))
+        copies = [k for k in th['copies'] if k.startswith('cursor:')]
+        self.assertEqual(len(copies), 1, 'the thread must record the native copy')
+        sid = copies[0].split(':', 1)[1]
+        self.assertEqual(cmd[-1], sid, 'the hop must resume the copy it just wrote')
+
+        written = os.path.join(os.environ['CURSOR_HOME'], 'sessions', sid + '.json')
+        self.assertTrue(os.path.exists(written), 'the copy must be a real session file')
+        doc = json.load(open(written, encoding='utf-8'))
+        self.assertEqual([m['role'] for m in doc['messages']], ['user', 'assistant'])
+
+    def test_handoff_flag_skips_the_native_copy(self):
+        os.environ['CURSOR_HOME'] = tempfile.mkdtemp(prefix='hop-cursor-')
+        args = argparse.Namespace(agent='cursor', query=None, all=False, handoff=True)
+        try:
+            self.cli.cmd_resume(args)
+        except SystemExit:
+            pass
+        self.assertTrue(self.launched)
+        cmd, _ = self.launched[0]
+        self.assertFalse(any('resume' in part for part in cmd),
+                         'the handoff path must not use the native resume command')
+
+        th = json.load(open(os.path.join(self.dir, self.thread['tid'] + '.json'), encoding='utf-8'))
+        self.assertFalse([k for k in th['copies'] if k.startswith('cursor:')])
 
 
 if __name__ == '__main__':
