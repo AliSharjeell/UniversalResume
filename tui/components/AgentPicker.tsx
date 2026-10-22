@@ -39,7 +39,10 @@ export function AgentPicker({
         {agents.map((agent, idx) => {
           const isSelected = idx === selectedIndex;
           const isRecent = agent.key === thread.recentAgent;
-          const mode = 'native copy';
+          // A copy already in this agent is resumed as it stands; otherwise hop writes the chat
+          // into the agent's own store first. Only agents that cannot be written get a handoff.
+          const hasCopy = Boolean(thread.copies?.[agent.key]);
+          const mode = hasCopy || agent.copyable ? 'native copy' : 'seeded handoff';
           const installedStr = agent.installed ? 'installed' : 'not installed';
           const recentTag = isRecent ? ' (recent agent)' : '';
 

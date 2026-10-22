@@ -22,6 +22,7 @@ export interface AgentInfo {
   cliName: string;
   installed: boolean;
   writable: boolean;
+  copyable: boolean;
   color: string;
   badgeBg: string;
   shortcut: string;

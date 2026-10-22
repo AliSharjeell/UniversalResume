@@ -16,6 +16,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
   badgeBg: string;
   shortcut: string;
   writable: boolean;
+  copyable: boolean;
   description: string;
 }> = {
   codex: {
@@ -26,6 +27,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#064E3B',
     shortcut: '1',
     writable: true,
+    copyable: true,
     description: 'OpenAI rollout session store',
   },
   cc: {
@@ -36,6 +38,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#78350F',
     shortcut: '2',
     writable: true,
+    copyable: true,
     description: 'Anthropic JSONL session store',
   },
   cursor: {
@@ -46,6 +49,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#0369A1',
     shortcut: '3',
     writable: false,
+    copyable: true,
     description: 'Cursor agent CLI sessions',
   },
   agy: {
@@ -56,6 +60,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#164E63',
     shortcut: '4',
     writable: false,
+    copyable: true,
     description: 'Google DeepMind Antigravity CLI',
   },
   grok: {
@@ -66,6 +71,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#334155',
     shortcut: '5',
     writable: false,
+    copyable: true,
     description: 'xAI Grok build and coding CLI',
   },
   deepseek: {
@@ -76,6 +82,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#312E81',
     shortcut: '6',
     writable: false,
+    copyable: true,
     description: 'DeepSeek Coder harness sessions',
   },
   hermes: {
@@ -86,6 +93,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#831843',
     shortcut: '7',
     writable: false,
+    copyable: true,
     description: 'Nous Research Hermes agent CLI',
   },
   openclaw: {
@@ -96,6 +104,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#7C2D12',
     shortcut: '8',
     writable: false,
+    copyable: true,
     description: 'OpenClaw autonomous agent sessions',
   },
   aider: {
@@ -106,6 +115,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#581C87',
     shortcut: '9',
     writable: false,
+    copyable: true,
     description: 'Aider AI pair programmer CLI',
   },
   oc: {
@@ -116,6 +126,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#701A75',
     shortcut: '10',
     writable: true,
+    copyable: true,
     description: 'Anomaly OpenCode SQLite database',
   },
   openhands: {
@@ -126,6 +137,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#075985',
     shortcut: '11',
     writable: false,
+    copyable: true,
     description: 'All-Hands OpenHands agent sessions',
   },
   qwen: {
@@ -136,6 +148,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#713F12',
     shortcut: '12',
     writable: true,
+    copyable: true,
     description: 'Alibaba Qwen Code sessions',
   },
   kimi: {
@@ -146,6 +159,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#4C1D95',
     shortcut: '13',
     writable: true,
+    copyable: true,
     description: 'Moonshot Kimi Code sessions',
   },
   mmx: {
@@ -156,6 +170,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#881337',
     shortcut: '14',
     writable: false,
+    copyable: true,
     description: 'MiniMax SQLite session store',
   },
   pi: {
@@ -166,6 +181,7 @@ export const AGENT_REGISTRY: Record<AgentKey, {
     badgeBg: '#134E4A',
     shortcut: '15',
     writable: true,
+    copyable: true,
     description: 'Inflection Pi agent entry tree',
   },
 };
@@ -240,6 +256,7 @@ export function detectAgents(): AgentInfo[] {
       cliName: meta.cliName,
       installed: checks[key] ?? false,
       writable: meta.writable,
+      copyable: meta.copyable,
       color: meta.color,
       badgeBg: meta.badgeBg,
       shortcut: meta.shortcut,
