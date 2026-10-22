@@ -128,5 +128,106 @@ class AiderNativeCopy(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.project, '.aider.chat.history.md')))
 
 
+class MiniMaxNativeCopy(unittest.TestCase):
+    """MiniMax keeps the real session on disk and indexes it in the runtime store."""
+
+    SESSIONS_SQL = """
+    CREATE TABLE local_runtime_sessions (
+      session_id TEXT PRIMARY KEY, record_json TEXT NOT NULL, updated_at_ms INTEGER NOT NULL,
+      columnar_version INTEGER NOT NULL DEFAULT 0, agent_name TEXT, runtime TEXT, session_type TEXT,
+      status TEXT, archived INTEGER NOT NULL DEFAULT 0, visibility TEXT NOT NULL DEFAULT 'visible',
+      session_kind TEXT NOT NULL DEFAULT 'unknown', purpose TEXT, purpose_kind TEXT NOT NULL DEFAULT '',
+      origin_cron_id TEXT, parent_session_id TEXT, workspace_dir TEXT, project_workspace_dir TEXT,
+      is_default_workspace INTEGER NOT NULL DEFAULT 0, title TEXT, created_at_ms INTEGER,
+      error_message TEXT, error_code INTEGER, extra_data_json TEXT NOT NULL DEFAULT '{}',
+      project_id INTEGER, history_relative_dir TEXT)
+    """
+    MESSAGES_SQL = """
+    CREATE TABLE local_runtime_message_rows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, msg_id TEXT NOT NULL, role TEXT,
+      turn_id TEXT, created_at_ms INTEGER NOT NULL, data_json TEXT NOT NULL, source TEXT,
+      source_context_json TEXT, UNIQUE(session_id, msg_id))
+    """
+    CHECKPOINT_SQL = """
+    CREATE TABLE local_runtime_pi_history_file_migrations (
+      session_id TEXT PRIMARY KEY, migrated_at_ms INTEGER NOT NULL, source TEXT NOT NULL,
+      message_count INTEGER NOT NULL, target_revision TEXT NOT NULL)
+    """
+
+    def setUp(self):
+        import sqlite3
+        self.root = tempfile.mkdtemp(prefix='hop-mmx-')
+        os.makedirs(os.path.join(self.root, 'v2', 'sqlite'), exist_ok=True)
+        db = os.path.join(self.root, 'v2', 'sqlite', 'runtime-state.sqlite')
+        c = sqlite3.connect(db)
+        c.execute(self.SESSIONS_SQL)
+        c.execute(self.MESSAGES_SQL)
+        c.execute(self.CHECKPOINT_SQL)
+        c.commit()
+        c.close()
+        os.environ['MINIMAX_DATA_DIR'] = self.root
+        os.environ.pop('MAVIS_DATA_DIR', None)
+
+    def test_copy_writes_a_session_folder_and_indexes_it(self):
+        agent = AGENTS['mmx']
+        res = agent.write(None, r'C:\AppsNew\project', MSGS, 'CI is red', {'cfg': CFG})
+
+        folder = res['path']
+        self.assertTrue(os.path.isdir(folder))
+        for name in ('manifest.json', 'messages.jsonl', 'user-message-locators.jsonl', 'history-catalog.json'):
+            self.assertTrue(os.path.exists(os.path.join(folder, name)), f'{name} is missing')
+
+        sessions = agent.list(CFG)
+        self.assertIn(f'mmx:{res["id"]}', sessions, 'the runtime must list the copy')
+        self.assertEqual(sessions[f'mmx:{res["id"]}']['cwd'], r'C:\AppsNew\project')
+
+    def test_copy_reads_back_through_the_runtime_store(self):
+        agent = AGENTS['mmx']
+        res = agent.write(None, r'C:\AppsNew\project', MSGS, 'CI is red', {'cfg': CFG})
+        sessions = agent.list(CFG)
+        els = agent.read(sessions[f'mmx:{res["id"]}'], CFG)
+        self.assertEqual([e['role'] for e in els], ['user', 'assistant'])
+        self.assertEqual([e['text'] for e in els], ['why is CI red?', 'looking into it'])
+        self.assertEqual(sorted(e['id'] for e in els), sorted(res['seen']))
+
+    def test_history_catalog_matches_the_messages_file(self):
+        import hashlib
+        agent = AGENTS['mmx']
+        res = agent.write(None, r'C:\AppsNew\project', MSGS, 'CI is red', {'cfg': CFG})
+        body = open(os.path.join(res['path'], 'messages.jsonl'), encoding='utf-8').read()
+        catalog = json.load(open(os.path.join(res['path'], 'history-catalog.json'), encoding='utf-8'))
+        records = [json.loads(l) for l in body.split('\n') if l.strip()]
+        revision = 'sha256:' + hashlib.sha256(json.dumps(records, ensure_ascii=False, sort_keys=True,
+                                                         separators=(',', ':')).encode('utf-8')).hexdigest()
+        self.assertEqual(catalog['activeRevision'], revision)
+        self.assertEqual(catalog['artifacts'][0]['byteLength'], len(body.encode('utf-8')))
+        self.assertEqual(catalog['artifacts'][0]['messageCount'], len(records))
+
+    def test_copy_records_the_history_migration_checkpoint(self):
+        """Without the checkpoint the runtime re-derives the history and rejects the copy."""
+        import sqlite3
+        agent = AGENTS['mmx']
+        res = agent.write(None, r'C:\AppsNew\project', MSGS, 'CI is red', {'cfg': CFG})
+        c = sqlite3.connect(os.path.join(self.root, 'v2', 'sqlite', 'runtime-state.sqlite'))
+        row = c.execute('select session_id, source, message_count, target_revision '
+                        'from local_runtime_pi_history_file_migrations where session_id=?',
+                        (res['id'],)).fetchone()
+        c.close()
+        self.assertIsNotNone(row, 'the runtime needs a migration checkpoint for a hand-written session')
+        self.assertEqual(row[1], 'sqlite-rows')
+        self.assertEqual(row[2], len(MSGS))
+        self.assertTrue(row[3].startswith('sha256:'))
+
+    def test_every_message_carries_a_timestamp(self):
+        agent = AGENTS['mmx']
+        res = agent.write(None, r'C:\AppsNew\project', MSGS, 'CI is red', {'cfg': CFG})
+        with open(os.path.join(res['path'], 'messages.jsonl'), encoding='utf-8') as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                msg = json.loads(line)['message']
+                self.assertIsInstance(msg.get('timestamp'), (int, float), 'the runtime rejects a missing timestamp')
+
+
 if __name__ == '__main__':
     unittest.main()
