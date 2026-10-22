@@ -145,16 +145,34 @@ def cmd_resume(args):
     copies = [k for k in th['copies'] if k.startswith(key + ':')]
     if copies:
         best = max(copies, key=lambda k: (th['copies'][k]['upto'], th['copies'][k]['owned']))
-        launch(agent.resume_cmd(best.split(':', 1)[1]), th['cwd'])
+        cp = th['copies'][best]
+        old_sid = best.split(':', 1)[1]
+        if cp.get('upto', 0) < len(th['elements']) and agent.can_copy and not getattr(args, 'handoff', False):
+            try:
+                cfg = load_config()
+                write_target = dict(cp, id=old_sid) if cp.get('owned') else None
+                res = agent.write(write_target, th['cwd'], render(th, cfg), thread_title(th), {'cfg': cfg})
+                if res:
+                    sid, seen, sig = res['id'], res['seen'], res['sig']
+                    new_key = f'{key}:{sid}'
+                    th['copies'][new_key] = {'id': sid, 'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
+                    write_json(os.path.join(THREAD_DIR, th['tid'] + '.json'), th)
+                    launch(agent.resume_cmd(sid), th['cwd'])
+                    return
+            except Exception as e:
+                log(f'! {agent.name} native copy update failed for "{th["base_title"]}": {e}')
+        launch(agent.resume_cmd(old_sid), th['cwd'])
+        return
     if agent.can_copy and not getattr(args, 'handoff', False):
         try:
             cfg = load_config()
             res = agent.write(None, th['cwd'], render(th, cfg), thread_title(th), {'cfg': cfg})
             if res:
                 sid, seen, sig = res['id'], res['seen'], res['sig']
-                th['copies'][f'{key}:{sid}'] = {'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
+                th['copies'][f'{key}:{sid}'] = {'id': sid, 'owned': True, 'seen': seen, 'sig': sig, 'upto': len(th['elements']), 'title': thread_title(th)}
                 write_json(os.path.join(THREAD_DIR, th['tid'] + '.json'), th)
                 launch(agent.resume_cmd(sid), th['cwd'])
+                return
         except Exception as e:
             log(f'! {agent.name} native copy failed for "{th["base_title"]}": {e}')
     seed(agent, th)
@@ -166,7 +184,7 @@ def cmd_agents(args):
     print(f'{"agent":<10} {"installed":<10} {"mirrors":<9} resume')
     for key, agent in AGENTS.items():
         found = agent.detect()
-        mode = 'written' if key in writable else ('seeded' if not agent.writable else '-')
+        mode = 'written' if key in writable else ('copied' if agent.can_copy else ('seeded' if not agent.writable else '-'))
         print(f'{agent.name:<10} {"yes" if found else "no":<10} {mode if found else "-":<9} hop resume {key}')
 
 

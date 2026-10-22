@@ -375,6 +375,38 @@ class HopResumeNativeCopy(unittest.TestCase):
         th = json.load(open(os.path.join(self.dir, self.thread['tid'] + '.json'), encoding='utf-8'))
         self.assertFalse([k for k in th['copies'] if k.startswith('cursor:')])
 
+    def test_resume_updates_existing_copy_that_is_behind(self):
+        os.environ['CURSOR_HOME'] = tempfile.mkdtemp(prefix='hop-cursor-')
+        # First resume: creates the copy with 2 elements
+        args = argparse.Namespace(agent='cursor', query=None, all=False, handoff=False)
+        try:
+            self.cli.cmd_resume(args)
+        except SystemExit:
+            pass
+        self.assertEqual(len(self.launched), 1)
+
+        # Thread gets a 3rd element from another agent
+        th = json.load(open(os.path.join(self.dir, self.thread['tid'] + '.json'), encoding='utf-8'))
+        th['elements'].append({'id': '2', 'role': 'user', 'text': 'new turn from codex',
+                               'author': 'codex', 'kind': 'msg', 'ts': 1790000002000})
+        with open(os.path.join(self.dir, self.thread['tid'] + '.json'), 'w', encoding='utf-8') as f:
+            json.dump(th, f)
+
+        # Second resume: copy was behind, must update it before launching
+        self.launched.clear()
+        try:
+            self.cli.cmd_resume(args)
+        except SystemExit:
+            pass
+        self.assertEqual(len(self.launched), 1)
+        th2 = json.load(open(os.path.join(self.dir, self.thread['tid'] + '.json'), encoding='utf-8'))
+        copies = [k for k in th2['copies'] if k.startswith('cursor:')]
+        self.assertEqual(th2['copies'][copies[0]]['upto'], 3)
+        sid = copies[0].split(':', 1)[1]
+        written = os.path.join(os.environ['CURSOR_HOME'], 'sessions', sid + '.json')
+        doc = json.load(open(written, encoding='utf-8'))
+        self.assertEqual(len(doc['messages']), 3)
+
 
 if __name__ == '__main__':
     unittest.main()
