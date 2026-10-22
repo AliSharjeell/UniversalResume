@@ -333,6 +333,31 @@ class Sync:
                 self.save(tid)
 
 
+def is_pid_alive(pid):
+    if pid <= 0:
+        return False
+    if pid == os.getpid():
+        return True
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(0x00100000 | 0x1000, False, pid)
+            if not handle:
+                return False
+            exit_code = ctypes.c_ulong()
+            ok = kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
+            kernel32.CloseHandle(handle)
+            return bool(ok and exit_code.value == 259)
+        except Exception:
+            return True
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def is_lock_stale(path):
     try:
         if time.time() - os.path.getmtime(path) > 600:
@@ -341,13 +366,7 @@ def is_lock_stale(path):
             content = f.read().strip()
         if content:
             pid = int(content)
-            if pid <= 0:
-                return True
-            if pid == os.getpid():
-                return False
-            try:
-                os.kill(pid, 0)
-            except OSError:
+            if not is_pid_alive(pid):
                 return True
         return False
     except (OSError, ValueError):
