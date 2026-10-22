@@ -6,7 +6,7 @@ import shutil
 import sqlite3
 import urllib.parse
 
-from ..core import HOME, el, file_sig, iso_ms, read_jsonl, text_of
+from ..core import HOME, el, file_sig, iso_ms, lp, read_jsonl, text_of
 from .base import Agent
 
 
@@ -22,7 +22,7 @@ def parse_uri(u):
 
 
 class Cursor(Agent):
-    key, name, aliases, binary, writable = 'cursor', 'Cursor', ('cursor-cli', 'cursor-agent', 'agent'), 'cursor-agent', False
+    key, name, aliases, binary, writable, copyable = 'cursor', 'Cursor', ('cursor-cli', 'cursor-agent', 'agent'), 'cursor-agent', False, True
 
     def _bin(self):
         return shutil.which('cursor-agent') or shutil.which('cursor') or 'cursor-agent'
@@ -116,6 +116,15 @@ class Cursor(Agent):
         except Exception:
             pass
         return els or [el(s['id'], 'user', s.get('title') or 'Cursor session', s.get('updated', 0))]
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes a Cursor session file Cursor lists and resumes itself."""
+        path, sid, seen = self.write_session_file(cp, cwd, msgs, title, root(), dirs=('sessions', 'chats'))
+        return {'id': sid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         b = self._bin()
