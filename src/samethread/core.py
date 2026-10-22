@@ -1,5 +1,6 @@
 """Shared plumbing: paths, config, logging, JSON and the tool-neutral transcript elements."""
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -200,7 +201,8 @@ def remap(cfg, path):
 
 def el(id_, role, text, ts, kind='msg'):
     if id_ is None or str(id_).strip() == '' or str(id_).strip() == 'None':
-        id_str = f'{role}:{ts}:{hash(text) & 0xffffffff:x}'
+        h = hashlib.sha256((text or '').encode('utf-8', errors='replace')).hexdigest()[:8]
+        id_str = f'{role}:{ts}:{h}'
     else:
         id_str = str(id_)
     return {'id': id_str, 'role': role, 'text': text, 'ts': ts or 0, 'kind': kind}
