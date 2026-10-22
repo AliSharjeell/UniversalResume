@@ -39,9 +39,8 @@ mkdir -p "$HOME/.local/bin"
 ln -sf "$TARGET_DIR/bin/resume.js" "$HOME/.local/bin/resume"
 chmod +x "$TARGET_DIR/bin/resume.js" "$HOME/.local/bin/resume"
 
-# Run hop install and initial sync
+# Run hop install (wires hooks and auto-syncs existing chats)
 hop install || true
-hop sync || true
 
 echo -e "\n\033[0;32mUniversalResume installed successfully!\033[0m"
 echo "Type 'resume' anywhere in your terminal to start."

@@ -5,6 +5,7 @@ import secrets
 import shutil
 import sqlite3
 import string
+import sys
 
 from .. import hookkit
 from ..core import HOME, HOP_DIR, HopError, el, fmt_call, fmt_result, now_ms, run_quiet, write_json
@@ -37,7 +38,10 @@ def connect(rw=False):
 
 
 def binary():
-    p = shutil.which('opencode')
+    if sys.platform == 'win32':
+        p = shutil.which('opencode.cmd') or shutil.which('opencode.exe') or shutil.which('opencode')
+    else:
+        p = shutil.which('opencode')
     if not p:
         raise HopError('opencode not found on PATH')
     exe = os.path.join(os.path.dirname(p), 'node_modules', 'opencode-ai', 'bin', 'opencode.exe')

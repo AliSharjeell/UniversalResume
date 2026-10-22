@@ -84,5 +84,5 @@ class MiniMax(Agent):
 
     def install(self, dry):
         # MiniMax Code does not load local hook plugins from the CLI yet, so there is no hook to add.
-        # Its chats are picked up by the next sync any other agent triggers, or by `hop sync`.
-        return 'no hook support yet; synced when another agent (or `hop sync`) runs'
+        # Its chats are picked up automatically whenever Universal Resume starts or syncs.
+        return 'no hook support yet; synced automatically on resume'

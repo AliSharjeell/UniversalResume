@@ -23,7 +23,7 @@ NO_WINDOW = 0x08000000 if os.name == 'nt' else 0
 
 DEFAULT_CONFIG = {
     'targets': 'auto',
-    'max_age_days': 30,
+    'max_age_days': 365,
     'min_user_messages': 1,
     'cc_entrypoints': ['cli'],
     'path_remap': {'C:\\Windows\\System32': '~'},
@@ -122,6 +122,9 @@ def load_config():
         user = {}
     if user.get('targets') == ['cc', 'oc']:  # the v0.1 default; newer versions detect installed agents
         user['targets'] = 'auto'
+        write_json(CONFIG_PATH, {**DEFAULT_CONFIG, **user}, indent=2)
+    if user.get('max_age_days') == 30:
+        user['max_age_days'] = 365
         write_json(CONFIG_PATH, {**DEFAULT_CONFIG, **user}, indent=2)
     return {**DEFAULT_CONFIG, **user}
 
@@ -255,5 +258,6 @@ def fmt_result(out, cfg):
 
 def run_quiet(args, cwd=None, timeout=180):
     env = dict(os.environ, HOP_SYNCING='1')
+    shell = sys.platform == 'win32' and str(args[0]).lower().endswith(('.cmd', '.bat'))
     return subprocess.run(args, cwd=cwd, env=env, capture_output=True, text=True, encoding='utf-8',
-                          errors='replace', timeout=timeout, creationflags=NO_WINDOW)
+                          errors='replace', timeout=timeout, creationflags=NO_WINDOW, shell=shell)
