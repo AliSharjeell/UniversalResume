@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ..core import HOME, el, iso_ms, read_jsonl, text_of
+from ..core import HOME, el, file_sig, iso_ms, lp, read_jsonl, text_of
 from .base import Agent
 
 
@@ -12,7 +12,7 @@ def root():
 
 
 class OpenHands(Agent):
-    key, name, aliases, binary, writable = 'openhands', 'OpenHands', ('all-hands', 'opendevin'), 'openhands', False
+    key, name, aliases, binary, writable, copyable = 'openhands', 'OpenHands', ('all-hands', 'opendevin'), 'openhands', False, True
 
     def detect(self):
         return bool(shutil.which('openhands') or os.path.isdir(root()))
@@ -53,6 +53,15 @@ class OpenHands(Agent):
         except Exception:
             pass
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes an OpenHands session file OpenHands lists and resumes itself."""
+        path, sid, seen = self.write_session_file(cp, cwd, msgs, title, root(), dirs=('sessions',))
+        return {'id': sid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         return ['openhands', '--resume', sid]

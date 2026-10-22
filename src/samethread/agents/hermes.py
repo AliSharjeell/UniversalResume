@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ..core import HOME, el, iso_ms, read_jsonl, text_of
+from ..core import HOME, el, file_sig, iso_ms, lp, read_jsonl, text_of
 from .base import Agent
 
 
@@ -12,7 +12,7 @@ def root():
 
 
 class Hermes(Agent):
-    key, name, aliases, binary, writable = 'hermes', 'Hermes', ('harmes', 'hermes-agent', 'hermes-cli'), 'hermes', False
+    key, name, aliases, binary, writable, copyable = 'hermes', 'Hermes', ('harmes', 'hermes-agent', 'hermes-cli'), 'hermes', False, True
 
     def _bin(self):
         return shutil.which('hermes') or shutil.which('hermes-agent') or 'hermes'
@@ -58,6 +58,15 @@ class Hermes(Agent):
         except Exception:
             pass
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes a Hermes session file Hermes lists and resumes itself."""
+        path, sid, seen = self.write_session_file(cp, cwd, msgs, title, root(), dirs=('sessions', 'conversations'))
+        return {'id': sid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         return [self._bin(), '--resume', sid]

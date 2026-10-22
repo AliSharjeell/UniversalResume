@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ..core import HOME, el, iso_ms, read_jsonl, text_of
+from ..core import HOME, el, file_sig, iso_ms, lp, read_jsonl, text_of
 from .base import Agent
 
 
@@ -12,7 +12,7 @@ def root():
 
 
 class DeepSeek(Agent):
-    key, name, aliases, binary, writable = 'deepseek', 'DeepSeek', ('deepseek-harness', 'deepseek-cli', 'deepseek-coder'), 'deepseek', False
+    key, name, aliases, binary, writable, copyable = 'deepseek', 'DeepSeek', ('deepseek-harness', 'deepseek-cli', 'deepseek-coder'), 'deepseek', False, True
 
     def _bin(self):
         return shutil.which('deepseek') or shutil.which('deepseek-harness') or shutil.which('deepseek-coder') or 'deepseek'
@@ -58,6 +58,15 @@ class DeepSeek(Agent):
         except Exception:
             pass
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes a DeepSeek session file DeepSeek lists and resumes itself."""
+        path, sid, seen = self.write_session_file(cp, cwd, msgs, title, root(), dirs=('sessions', 'chats'))
+        return {'id': sid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         return [self._bin(), '--resume', sid]

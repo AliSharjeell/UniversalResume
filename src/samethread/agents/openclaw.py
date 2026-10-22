@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 
-from ..core import HOME, el, iso_ms, read_jsonl, text_of
+from ..core import HOME, el, file_sig, iso_ms, lp, read_jsonl, text_of
 from .base import Agent
 
 
@@ -12,7 +12,7 @@ def root():
 
 
 class OpenClaw(Agent):
-    key, name, aliases, binary, writable = 'openclaw', 'OpenClaw', ('claw', 'open-claw'), 'openclaw', False
+    key, name, aliases, binary, writable, copyable = 'openclaw', 'OpenClaw', ('claw', 'open-claw'), 'openclaw', False, True
 
     def _bin(self):
         return shutil.which('openclaw') or shutil.which('claw') or 'openclaw'
@@ -58,6 +58,15 @@ class OpenClaw(Agent):
         except Exception:
             pass
         return els
+
+    def write(self, cp, cwd, msgs, title, ctx):
+        """Native copy: the chat becomes an OpenClaw session file OpenClaw lists and resumes itself."""
+        path, sid, seen = self.write_session_file(cp, cwd, msgs, title, root(), dirs=('sessions', 'chats'))
+        return {'id': sid, 'path': path, 'seen': seen, 'sig': file_sig(path)}
+
+    def delete(self, cp):
+        if cp.get('path') and os.path.exists(lp(cp['path'])):
+            os.remove(lp(cp['path']))
 
     def resume_cmd(self, sid):
         return [self._bin(), '--resume', sid]
