@@ -47,7 +47,7 @@ resume
 
 - **Hit rate limits on Claude?** Instantly switch to **Codex**, **Cursor CLI**, **Grok Build**, or **Antigravity**.
 - **Started in Codex?** Hop into **Claude Code**, **DeepSeek Harness**, **Hermes**, or **OpenClaw** with full history and context preserved.
-- **Zero copy-pasting:** Every conversation across 15 coding agents is automatically tracked and mirrored into each agent's native format or continuous handoff.
+- **Zero copy-pasting:** Every conversation across 15 coding agents is automatically tracked and mirrored into each agent's native format, so every hop opens a session that already holds the whole thread.
 - **Run anywhere:** Works in any directory, terminal, or shell on Windows, macOS, and Linux.
 
 ---
@@ -58,19 +58,22 @@ resume
 |---|---|---|
 | **Claude Code** | `claude` | Native session resume |
 | **Codex CLI** | `codex` | Native session resume |
-| **Cursor CLI** | `cursor-agent` / `cursor` | Continuous handoff |
-| **Antigravity CLI** | `agy` | Seeded continuous handoff |
-| **Grok Build** | `grok` | Continuous handoff |
-| **DeepSeek Harness** | `deepseek` | Continuous handoff |
-| **Hermes Agent** | `hermes` | Continuous handoff |
-| **OpenClaw** | `openclaw` | Continuous handoff |
-| **Aider** | `aider` | Continuous handoff |
+| **Cursor CLI** | `cursor-agent` / `cursor` | Native session resume |
+| **Antigravity CLI** | `agy` | Native session resume |
+| **Grok Build** | `grok` | Native session resume |
+| **DeepSeek Harness** | `deepseek` | Native session resume |
+| **Hermes Agent** | `hermes` | Native session resume |
+| **OpenClaw** | `openclaw` | Native session resume |
+| **Aider** | `aider` | Native session resume |
 | **OpenCode** | `opencode` | Native session resume |
-| **OpenHands** | `openhands` | Continuous handoff |
+| **OpenHands** | `openhands` | Native session resume |
 | **Qwen Code** | `qwen` | Native session resume |
 | **Kimi Code** | `kimi` | Native session resume |
-| **MiniMax Code** | `minimax` | Seeded continuous handoff |
+| **MiniMax Code** | `minimax` | Native session resume |
 | **Pi Agent** | `pi` | Native session resume |
+
+Every hop writes the chat into the agent's own store first, then opens it with that agent's
+own resume command. `hop resume <agent> --handoff` still seeds a fresh conversation instead.
 
 ---
 

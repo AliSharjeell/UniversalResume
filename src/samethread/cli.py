@@ -3,8 +3,9 @@
 Every chat is mirrored into the other agents' own session stores, so each agent's native
 resume picker lists it, titled with the agents that wrote it: "Fix login (Agy)",
 "Fix login (Agy+Claude)". Originals are never modified; hop only rewrites mirrors it created.
-Agents hop can't write into (Antigravity, MiniMax Code) are reached with `hop resume <agent>`,
-which seeds a new conversation from the transcript.
+A hop into any agent writes the chat into that agent's own store first and then opens it
+with the agent's own resume command; `hop resume <agent> --handoff` seeds a conversation
+instead.
 
 State lives in ~/.hop: config.json, index.json, threads/<id>.json, hop.log.
 """
