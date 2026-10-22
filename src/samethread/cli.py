@@ -10,6 +10,7 @@ State lives in ~/.hop: config.json, index.json, threads/<id>.json, hop.log.
 """
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -81,8 +82,8 @@ def cmd_list(args):
 
 
 def format_seamless_prompt(th, cfg, path):
-    tid = th['tid']
-    title = th['base_title']
+    tid = th.get('tid', '')
+    title = th.get('base_title') or th.get('title') or thread_title(th) or 'Untitled'
     origin = tag(th) or 'another agent'
 
     msgs = render(th, cfg)

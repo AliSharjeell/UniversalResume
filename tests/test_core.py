@@ -320,6 +320,19 @@ class RegressionTests(unittest.TestCase):
             # Must not raise ValueError: list.index(x): x not in list
             cli.cmd_list(args)
 
+    def test_format_seamless_prompt_and_seed_cmd(self):
+        from samethread import cli
+        th = thread([e('1', 'user', 'hello from codex'), e('2', 'assistant', 'ready to help')])
+        th['tid'] = 'test-seamless-tid'
+        prompt = cli.format_seamless_prompt(th, CFG, '/tmp/test.md')
+        self.assertIn('Continuing conversation', prompt)
+        self.assertIn('hello from codex', prompt)
+        agy = AGENTS['agy']
+        cmd = agy.seed_cmd(prompt)
+        self.assertEqual(cmd[0], 'agy')
+        self.assertEqual(cmd[1], '-i')
+        self.assertEqual(cmd[2], prompt)
+
 
 if __name__ == '__main__':
     unittest.main()

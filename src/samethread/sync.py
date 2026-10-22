@@ -341,6 +341,10 @@ def is_lock_stale(path):
             content = f.read().strip()
         if content:
             pid = int(content)
+            if pid <= 0:
+                return True
+            if pid == os.getpid():
+                return False
             try:
                 os.kill(pid, 0)
             except OSError:
