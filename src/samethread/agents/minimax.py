@@ -243,10 +243,14 @@ class MiniMax(Agent):
         sid = cp.get('id')
         if not sid:
             return
+        rel = None
         try:
             c = sqlite3.connect(db_path(), timeout=30)
             try:
                 c.execute('pragma busy_timeout=30000')
+                row = c.execute('select history_relative_dir from local_runtime_sessions where session_id=?',
+                                (sid,)).fetchone()
+                rel = row[0] if row else None
                 c.execute('delete from local_runtime_message_rows where session_id=?', (sid,))
                 c.execute('delete from local_runtime_sessions where session_id=?', (sid,))
                 c.execute('delete from local_runtime_pi_history_file_migrations where session_id=?', (sid,))
@@ -255,13 +259,12 @@ class MiniMax(Agent):
                 c.close()
         except Exception:
             pass
-        path = cp.get('path')
-        if path and os.path.isdir(lp(path)):
-            try:
-                import shutil
-                shutil.rmtree(lp(path), ignore_errors=True)
-            except Exception:
-                pass
+        folder = cp.get('path')
+        if not folder and rel:
+            folder = os.path.join(sessions_root(), *rel.split('/'))
+        if folder and os.path.isdir(lp(folder)):
+            import shutil
+            shutil.rmtree(lp(folder), ignore_errors=True)
 
     def resume_cmd(self, sid):
         return ['mcode', '--session', sid]
