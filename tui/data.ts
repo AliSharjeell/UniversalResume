@@ -170,14 +170,42 @@ export const AGENT_REGISTRY: Record<AgentKey, {
   },
 };
 
+let cachedPathFiles: Set<string> | null = null;
+const windowsPathExts = (process.env.PATHEXT || '.EXE;.CMD;.BAT;.COM')
+  .split(';')
+  .map((e) => e.toLowerCase());
+
+function getPathFiles(): Set<string> {
+  if (cachedPathFiles) return cachedPathFiles;
+  const set = new Set<string>();
+  const pathDirs = (process.env.PATH || '')
+    .split(process.platform === 'win32' ? ';' : ':')
+    .filter(Boolean);
+
+  for (const dir of pathDirs) {
+    try {
+      const files = fs.readdirSync(dir);
+      for (const f of files) {
+        set.add(f.toLowerCase());
+      }
+    } catch {
+      // Directory in PATH might not exist or be inaccessible
+    }
+  }
+  cachedPathFiles = set;
+  return set;
+}
+
 export function isCommandAvailable(cmd: string): boolean {
   try {
+    const pathFiles = getPathFiles();
+    const c = cmd.toLowerCase();
     if (process.platform === 'win32') {
-      execSync(`where.exe ${cmd}`, { stdio: 'ignore' });
-    } else {
-      execSync(`which ${cmd}`, { stdio: 'ignore' });
+      for (const ext of windowsPathExts) {
+        if (pathFiles.has(c + ext)) return true;
+      }
     }
-    return true;
+    return pathFiles.has(c);
   } catch {
     return false;
   }
@@ -266,135 +294,205 @@ function resolveAgentKey(toolOrKey: string): AgentKey {
   return 'agy';
 }
 
+function parseThreadData(file: string, data: any): ThreadItem {
+  const tid = data.tid || path.basename(file, '.json');
+  const baseTitle = data.base_title || 'Untitled Session';
+  const cwd = data.cwd || process.cwd();
+  const updated = Number(data.updated) || 0;
+  const elements: any[] = Array.isArray(data.elements) ? data.elements : [];
+
+  // Determine recent agent
+  let recentAgentKey: AgentKey = 'agy';
+  if (typeof data.head === 'string' && data.head.includes(':')) {
+    recentAgentKey = resolveAgentKey(data.head.split(':')[0]);
+  } else if (typeof data.origin === 'string') {
+    recentAgentKey = resolveAgentKey(data.origin.split(':')[0]);
+  }
+
+  // Collect participants
+  const participantSet = new Set<string>();
+  for (const el of elements) {
+    if (el?.author) {
+      const key = resolveAgentKey(el.author);
+      participantSet.add(AGENT_REGISTRY[key]?.shortName || el.author);
+    }
+  }
+  if (participantSet.size === 0) {
+    participantSet.add(AGENT_REGISTRY[recentAgentKey]?.shortName || 'Agy');
+  }
+
+  const tag = Array.from(participantSet).join('+');
+  const title = `${baseTitle} (${tag})`;
+
+  // Copies
+  const copies: Record<string, ThreadCopy> = {};
+  if (data.copies && typeof data.copies === 'object') {
+    for (const [key, cp] of Object.entries<any>(data.copies)) {
+      const tool = key.split(':')[0];
+      const sid = key.split(':')[1] || '';
+      const agentKey = resolveAgentKey(tool);
+      const meta = AGENT_REGISTRY[agentKey];
+      const upto = Number(cp.upto) || 0;
+      const behind = upto < elements.length;
+
+      let resumeCmd = `${meta?.cliName || tool} resume ${sid}`;
+      if (agentKey === 'cc') resumeCmd = `claude --resume ${sid}`;
+      if (agentKey === 'agy') resumeCmd = `agy --conversation ${sid}`;
+      if (agentKey === 'cursor') resumeCmd = `cursor-agent resume ${sid}`;
+      if (agentKey === 'grok') resumeCmd = `grok --resume ${sid}`;
+      if (agentKey === 'deepseek') resumeCmd = `deepseek --resume ${sid}`;
+      if (agentKey === 'hermes') resumeCmd = `hermes --resume ${sid}`;
+      if (agentKey === 'openclaw') resumeCmd = `openclaw --resume ${sid}`;
+      if (agentKey === 'aider') resumeCmd = `aider --restore-chat-history`;
+      if (agentKey === 'openhands') resumeCmd = `openhands --resume ${sid}`;
+
+      copies[agentKey] = {
+        tool,
+        agentName: meta?.shortName || tool,
+        sid,
+        owned: Boolean(cp.owned),
+        upto,
+        behind,
+        resumeCmd,
+      };
+    }
+  }
+
+  // Fast scan for first user prompt and last user/assistant replies
+  let firstUserPrompt = '';
+  let lastUserPrompt = '';
+  let lastAssistantReply = '';
+  let userTurns = 0;
+  let assistantTurns = 0;
+
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i];
+    if (el?.role === 'user') {
+      userTurns++;
+      if (!firstUserPrompt && typeof el.text === 'string' && el.text.trim()) {
+        firstUserPrompt = el.text.trim();
+      }
+    } else if (el?.role === 'assistant') {
+      assistantTurns++;
+    }
+  }
+
+  for (let i = elements.length - 1; i >= 0; i--) {
+    const el = elements[i];
+    if (!lastUserPrompt && el?.role === 'user' && typeof el.text === 'string' && el.text.trim()) {
+      lastUserPrompt = el.text.trim();
+    }
+    if (!lastAssistantReply && el?.role === 'assistant' && typeof el.text === 'string' && el.text.trim()) {
+      lastAssistantReply = el.text.trim();
+    }
+    if (lastUserPrompt && lastAssistantReply) break;
+  }
+
+  let folderName = path.basename(cwd) || cwd;
+  if (
+    !cwd ||
+    cwd === '~' ||
+    cwd.toLowerCase() === os.homedir().toLowerCase() ||
+    cwd.toLowerCase() === path.resolve(os.homedir()).toLowerCase()
+  ) {
+    folderName = '~';
+  }
+  const recentAgentMeta = AGENT_REGISTRY[recentAgentKey] || AGENT_REGISTRY.agy;
+
+  return {
+    tid,
+    title,
+    baseTitle,
+    tag,
+    recentAgent: recentAgentKey,
+    recentAgentName: recentAgentMeta.shortName,
+    recentAgentColor: recentAgentMeta.color,
+    cwd,
+    folderName,
+    updated,
+    updatedAgo: formatAgo(updated),
+    turnCount: elements.length,
+    userTurns,
+    assistantTurns,
+    firstUserPrompt: firstUserPrompt.slice(0, 300),
+    lastUserPrompt: lastUserPrompt.slice(0, 300),
+    lastAssistantReply: lastAssistantReply.slice(0, 300),
+    copies,
+    participants: Array.from(participantSet),
+  };
+}
+
+const THREADS_CACHE_FILE = path.join(HOP_DIR, 'threads_cache.json');
+
+interface ThreadCacheStore {
+  version: number;
+  entries: Record<string, { mtime: number; item: ThreadItem }>;
+}
+
 export function loadAllThreads(): ThreadItem[] {
   if (!fs.existsSync(THREADS_DIR)) {
     return [];
   }
 
   const files = fs.readdirSync(THREADS_DIR).filter((f) => f.endsWith('.json'));
+  const currentFiles = new Set(files);
+
+  let cache: ThreadCacheStore = { version: 1, entries: {} };
+  if (fs.existsSync(THREADS_CACHE_FILE)) {
+    try {
+      const raw = fs.readFileSync(THREADS_CACHE_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.version === 1 && typeof parsed.entries === 'object') {
+        cache = parsed;
+      }
+    } catch {
+      // Ignore cache parse errors
+    }
+  }
+
   const threads: ThreadItem[] = [];
+  let cacheDirty = false;
+
+  // Prune deleted files
+  for (const cachedFile of Object.keys(cache.entries)) {
+    if (!currentFiles.has(cachedFile)) {
+      delete cache.entries[cachedFile];
+      cacheDirty = true;
+    }
+  }
 
   for (const file of files) {
     try {
       const fullPath = path.join(THREADS_DIR, file);
+      const st = fs.statSync(fullPath);
+      const cached = cache.entries[file];
+
+      if (cached && cached.mtime === st.mtimeMs && cached.item) {
+        cached.item.updatedAgo = formatAgo(cached.item.updated);
+        threads.push(cached.item);
+        continue;
+      }
+
       const raw = fs.readFileSync(fullPath, 'utf8');
       const data = JSON.parse(raw);
+      const item = parseThreadData(file, data);
 
-      const tid = data.tid || path.basename(file, '.json');
-      const baseTitle = data.base_title || 'Untitled Session';
-      const cwd = data.cwd || process.cwd();
-      const updated = Number(data.updated) || 0;
-      const elements: any[] = Array.isArray(data.elements) ? data.elements : [];
-
-      // Determine recent agent
-      let recentAgentKey: AgentKey = 'agy';
-      if (typeof data.head === 'string' && data.head.includes(':')) {
-        recentAgentKey = resolveAgentKey(data.head.split(':')[0]);
-      } else if (typeof data.origin === 'string') {
-        recentAgentKey = resolveAgentKey(data.origin.split(':')[0]);
-      }
-
-      // Collect participants
-      const participantSet = new Set<string>();
-      for (const el of elements) {
-        if (el?.author) {
-          const key = resolveAgentKey(el.author);
-          participantSet.add(AGENT_REGISTRY[key]?.shortName || el.author);
-        }
-      }
-      if (participantSet.size === 0) {
-        participantSet.add(AGENT_REGISTRY[recentAgentKey]?.shortName || 'Agy');
-      }
-
-      const tag = Array.from(participantSet).join('+');
-      const title = `${baseTitle} (${tag})`;
-
-      // Copies
-      const copies: Record<string, ThreadCopy> = {};
-      if (data.copies && typeof data.copies === 'object') {
-        for (const [key, cp] of Object.entries<any>(data.copies)) {
-          const tool = key.split(':')[0];
-          const sid = key.split(':')[1] || '';
-          const agentKey = resolveAgentKey(tool);
-          const meta = AGENT_REGISTRY[agentKey];
-          const upto = Number(cp.upto) || 0;
-          const behind = upto < elements.length;
-
-          let resumeCmd = `${meta?.cliName || tool} resume ${sid}`;
-          if (agentKey === 'cc') resumeCmd = `claude --resume ${sid}`;
-          if (agentKey === 'agy') resumeCmd = `agy --conversation ${sid}`;
-          if (agentKey === 'cursor') resumeCmd = `cursor-agent resume ${sid}`;
-          if (agentKey === 'grok') resumeCmd = `grok --resume ${sid}`;
-          if (agentKey === 'deepseek') resumeCmd = `deepseek --resume ${sid}`;
-          if (agentKey === 'hermes') resumeCmd = `hermes --resume ${sid}`;
-          if (agentKey === 'openclaw') resumeCmd = `openclaw --resume ${sid}`;
-          if (agentKey === 'aider') resumeCmd = `aider --restore-chat-history`;
-          if (agentKey === 'openhands') resumeCmd = `openhands --resume ${sid}`;
-
-          copies[agentKey] = {
-            tool,
-            agentName: meta?.shortName || tool,
-            sid,
-            owned: Boolean(cp.owned),
-            upto,
-            behind,
-            resumeCmd,
-          };
-        }
-      }
-
-      // First user prompt and last user prompt
-      let firstUserPrompt = '';
-      let lastUserPrompt = '';
-      let lastAssistantReply = '';
-      let userTurns = 0;
-      let assistantTurns = 0;
-
-      for (const el of elements) {
-        if (el?.role === 'user' && typeof el.text === 'string' && el.text.trim()) {
-          userTurns++;
-          if (!firstUserPrompt) firstUserPrompt = el.text.trim();
-          lastUserPrompt = el.text.trim();
-        } else if (el?.role === 'assistant' && typeof el.text === 'string' && el.text.trim()) {
-          assistantTurns++;
-          lastAssistantReply = el.text.trim();
-        }
-      }
-
-      let folderName = path.basename(cwd) || cwd;
-      if (
-        !cwd ||
-        cwd === '~' ||
-        cwd.toLowerCase() === os.homedir().toLowerCase() ||
-        cwd.toLowerCase() === path.resolve(os.homedir()).toLowerCase()
-      ) {
-        folderName = '~';
-      }
-      const recentAgentMeta = AGENT_REGISTRY[recentAgentKey] || AGENT_REGISTRY.agy;
-
-      threads.push({
-        tid,
-        title,
-        baseTitle,
-        tag,
-        recentAgent: recentAgentKey,
-        recentAgentName: recentAgentMeta.shortName,
-        recentAgentColor: recentAgentMeta.color,
-        cwd,
-        folderName,
-        updated,
-        updatedAgo: formatAgo(updated),
-        turnCount: elements.length,
-        userTurns,
-        assistantTurns,
-        firstUserPrompt: firstUserPrompt.slice(0, 300),
-        lastUserPrompt: lastUserPrompt.slice(0, 300),
-        lastAssistantReply: lastAssistantReply.slice(0, 300),
-        copies,
-        participants: Array.from(participantSet),
-      });
+      cache.entries[file] = {
+        mtime: st.mtimeMs,
+        item,
+      };
+      cacheDirty = true;
+      threads.push(item);
     } catch {
       // Ignore unparseable files
+    }
+  }
+
+  if (cacheDirty) {
+    try {
+      fs.writeFileSync(THREADS_CACHE_FILE, JSON.stringify(cache), 'utf8');
+    } catch {
+      // Ignore cache write errors
     }
   }
 

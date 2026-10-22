@@ -19,7 +19,7 @@ if (fs.existsSync(pendingLaunchFile)) {
 }
 
 // 1. Run the interactive OpenTUI selector synchronously
-const tuiResult = spawnSync('bun', ['run', tuiEntry, ...process.argv.slice(2)], {
+const tuiResult = spawnSync('bun', [tuiEntry, ...process.argv.slice(2)], {
   stdio: 'inherit',
   env: {
     ...process.env,
