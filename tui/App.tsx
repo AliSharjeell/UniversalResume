@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import os from 'node:os';
+import path from 'node:path';
 import { useKeyboard, useTerminalDimensions } from '@opentui/react';
 import type { AgentInfo, AgentKey, ThreadItem, ViewMode } from './types.ts';
 import { detectAgents, filterThreads, loadAllThreads, runSync } from './data.ts';
@@ -24,7 +26,18 @@ export function App({ currentCwd, initialQuery = '', onLaunch, onExit }: AppProp
 
   const globalCount = allThreads.length;
 
-  const [scopeAll, setScopeAll] = useState<boolean>(inFolderCount === 0);
+  const isHomeDir = useMemo(() => {
+    if (!currentCwd || currentCwd === '~') return true;
+    try {
+      const home = os.homedir().toLowerCase();
+      const norm = path.resolve(currentCwd).toLowerCase();
+      return norm === home;
+    } catch {
+      return false;
+    }
+  }, [currentCwd]);
+
+  const [scopeAll, setScopeAll] = useState<boolean>(inFolderCount === 0 || isHomeDir);
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [view, setView] = useState<ViewMode>('list');

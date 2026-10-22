@@ -195,11 +195,12 @@ class Antigravity(Agent):
                 for idx, m in enumerate(msgs):
                     is_user = m['role'] == 'user'
                     tpl = user_tpl if is_user else planner_tpl
-                    payload = self.rewrite_step(tpl, m['text'], m['ts'], cid, trajectory_id, cwd, is_user)
-                    if payload is None:
+                    res = self.rewrite_step(tpl, m['text'], m['ts'], cid, trajectory_id, cwd, is_user)
+                    if res is None:
                         break
-                    c.execute('insert into steps (idx, step_type, status, step_payload) values (?,?,?,?)',
-                              (idx, USER_STEP if is_user else PLANNER_STEP, STEP_STATUS_DONE, payload))
+                    payload, meta_bytes = res
+                    c.execute('insert into steps (idx, step_type, status, metadata, step_payload) values (?,?,?,?,?)',
+                              (idx, USER_STEP if is_user else PLANNER_STEP, STEP_STATUS_DONE, meta_bytes, payload))
             c.commit()
             return trajectory_id, meta_fields
         finally:
@@ -253,6 +254,7 @@ class Antigravity(Agent):
             set_field(fields, body_field, encode(body))
 
             meta = sub(fields, 5)
+            meta_bytes = b''
             if meta:
                 ident = sub(meta, 20)
                 if ident:
@@ -264,8 +266,9 @@ class Antigravity(Agent):
                     set_field(when, 1, int(ts // 1000), wire=0)
                     set_field(when, 2, int((ts % 1000) * 1_000_000), wire=0)
                     set_field(meta, 1, encode(when))
-                set_field(fields, 5, encode(meta))
-            return encode(fields)
+                meta_bytes = encode(meta)
+                set_field(fields, 5, meta_bytes)
+            return encode(fields), meta_bytes
         except Exception:
             return None
 
