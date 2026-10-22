@@ -213,9 +213,12 @@ class RegressionTests(unittest.TestCase):
             real_dir = os.path.join(td, "real_dir")
             os.makedirs(real_dir)
             symlink_dir = os.path.join(td, "symlink_dir")
-            os.symlink(real_dir, symlink_dir)
-            self.assertTrue(core.same_path(real_dir, symlink_dir))
-            self.assertTrue(core.same_path(real_dir.upper(), symlink_dir.lower()))
+            try:
+                os.symlink(real_dir, symlink_dir)
+                self.assertTrue(core.same_path(real_dir, symlink_dir))
+                self.assertTrue(core.same_path(real_dir.upper(), symlink_dir.lower()))
+            except (OSError, NotImplementedError):
+                self.assertTrue(core.same_path(real_dir.upper(), real_dir.lower()))
 
     def test_fork_clears_owned_flag(self):
         s = sync.Sync(CFG)
