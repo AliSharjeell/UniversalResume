@@ -19,11 +19,16 @@ if ! command -v bun &>/dev/null; then
 fi
 
 # Target directory
-TARGET_DIR="$HOME/.samethread-repo"
-if [ -d "$TARGET_DIR" ]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/pyproject.toml" ]; then
+  TARGET_DIR="$SCRIPT_DIR"
+  echo "Installing locally from $TARGET_DIR..."
+elif [ -d "$HOME/.samethread-repo" ]; then
+  TARGET_DIR="$HOME/.samethread-repo"
   echo "Updating repository in $TARGET_DIR..."
   git -C "$TARGET_DIR" pull --quiet
 else
+  TARGET_DIR="$HOME/.samethread-repo"
   echo "Cloning repository to $TARGET_DIR..."
   git clone --quiet https://github.com/AliSharjeell/UniversalResume.git "$TARGET_DIR"
 fi

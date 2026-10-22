@@ -16,11 +16,15 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
 }
 
 # Target directory
-$targetDir = "$env:USERPROFILE\.samethread-repo"
-if (Test-Path $targetDir) {
+if (Test-Path "$PSScriptRoot\pyproject.toml") {
+    $targetDir = (Resolve-Path $PSScriptRoot).Path
+    Write-Host "Installing locally from $targetDir..." -ForegroundColor Cyan
+} elseif (Test-Path "$env:USERPROFILE\.samethread-repo") {
+    $targetDir = "$env:USERPROFILE\.samethread-repo"
     Write-Host "Updating repository in $targetDir..." -ForegroundColor DarkGray
     git -C $targetDir pull --quiet
 } else {
+    $targetDir = "$env:USERPROFILE\.samethread-repo"
     Write-Host "Cloning repository to $targetDir..." -ForegroundColor DarkGray
     git clone --quiet https://github.com/AliSharjeell/UniversalResume.git $targetDir
 }
@@ -40,7 +44,18 @@ try {
 # Ensure resume wrapper is globally available in user npm
 $npmDir = "$env:APPDATA\npm"
 if (Test-Path $npmDir) {
-    Copy-Item -Force "$targetDir\bin\resume.cmd" "$npmDir\resume.cmd"
+    $cmdContent = @"
+@echo off
+setlocal
+if exist "%~dp0resume.js" (
+  bun "%~dp0resume.js" %*
+) else if exist "$targetDir\bin\resume.js" (
+  bun "$targetDir\bin\resume.js" %*
+) else (
+  bun "%USERPROFILE%\.samethread-repo\bin\resume.js" %*
+)
+"@
+    Set-Content -Path "$npmDir\resume.cmd" -Value $cmdContent -Encoding ASCII
 }
 
 Write-Host "`nUniversalResume installed successfully!" -ForegroundColor Green
