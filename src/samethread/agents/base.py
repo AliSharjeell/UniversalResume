@@ -3,7 +3,15 @@ import os
 import shutil
 import uuid
 
-from ..core import HopError, dumps, lp, write_json, write_lines
+from ..core import HopError, lp, write_json, write_lines
+
+
+def new_id():
+    """A time-ordered id where the runtime has one (uuid7), else a plain uuid4."""
+    try:
+        return str(uuid.uuid7())
+    except AttributeError:
+        return str(uuid.uuid4())
 
 
 class Agent:
@@ -48,7 +56,7 @@ class Agent:
         Returns (path, sid, seen). `seen` holds the element ids the agent's own reader will
         report, so sync can diff the copy against the thread later.
         """
-        sid = cp['id'] if cp else (sid or str(uuid.uuid4()))
+        sid = cp['id'] if cp else (sid or new_id())
         out = next((os.path.join(base_dir, d) for d in dirs if os.path.isdir(os.path.join(base_dir, d))), None)
         if out is None:
             out = os.path.join(base_dir, dirs[0])
@@ -62,7 +70,7 @@ class Agent:
         first = msgs[0]['ts'] if msgs else 0
         last = max((m['ts'] for m in msgs), default=0)
         if ext == 'jsonl':
-            write_lines(path, [dumps(r) for r in records], last)
+            write_lines(path, records, last)
         else:
             write_json(path, {'id': sid, 'title': title, 'cwd': cwd, 'createdAt': first, 'updatedAt': last,
                               'messages': records})
