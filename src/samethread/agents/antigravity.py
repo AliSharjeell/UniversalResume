@@ -195,7 +195,7 @@ class Antigravity(Agent):
                 for idx, m in enumerate(msgs):
                     is_user = m['role'] == 'user'
                     tpl = user_tpl if is_user else planner_tpl
-                    res = self.rewrite_step(tpl, m['text'], m['ts'], cid, trajectory_id, cwd, is_user)
+                    res = self.rewrite_step(tpl, m['text'], m['ts'], cid, trajectory_id, cwd, is_user, idx)
                     if res is None:
                         break
                     payload, meta_bytes = res
@@ -224,15 +224,19 @@ class Antigravity(Agent):
             for stype, payload in rows:
                 if not payload:
                     continue
-                if stype == USER_STEP and user_tpl is None:
+                try:
+                    f = decode(payload)
+                except Exception:
+                    continue
+                if stype == USER_STEP and user_tpl is None and sub(f, 19) is not None:
                     user_tpl = bytes(payload)
-                elif stype == PLANNER_STEP and planner_tpl is None:
+                elif stype == PLANNER_STEP and planner_tpl is None and sub(f, 20) is not None:
                     planner_tpl = bytes(payload)
             if user_tpl and planner_tpl:
                 break
         return user_tpl, planner_tpl
 
-    def rewrite_step(self, template, text, ts, cid, trajectory_id, cwd, is_user):
+    def rewrite_step(self, template, text, ts, cid, trajectory_id, cwd, is_user, idx=0):
         """Copy a real step and put this message, these ids and this time into it."""
         try:
             fields = decode(template)
@@ -242,10 +246,11 @@ class Antigravity(Agent):
                 return None
             if is_user:
                 set_field(body, 2, text.encode('utf-8'))
-                set_field(body, 3, ('\nJ' + text).encode('utf-8'))
+                set_field(body, 3, encode([[1, 2, text.encode('utf-8')]]))
             else:
                 set_field(body, 1, text.encode('utf-8'))
                 set_field(body, 8, text.encode('utf-8'))
+                set_field(body, 6, f'bot-{uuid.uuid4()}'.encode('utf-8'))
                 body = drop_field(body, 7)  # a plain reply carries no tool calls
             place = sub(body, 12)
             if place:
@@ -253,12 +258,19 @@ class Antigravity(Agent):
                 set_field(body, 12, encode(place))
             set_field(fields, body_field, encode(body))
 
+            set_field(fields, 1, USER_STEP if is_user else PLANNER_STEP, wire=0)
+            set_field(fields, 4, STEP_STATUS_DONE, wire=0)
+
             meta = sub(fields, 5)
             meta_bytes = b''
             if meta:
                 ident = sub(meta, 20)
                 if ident:
                     set_field(ident, 1, trajectory_id.encode('utf-8'))
+                    if idx > 0:
+                        set_field(ident, 2, idx, wire=0)
+                    else:
+                        ident = drop_field(ident, 2)
                     set_field(ident, 4, cid.encode('utf-8'))
                     set_field(meta, 20, encode(ident))
                 when = sub(meta, 1)
@@ -288,10 +300,14 @@ class Antigravity(Agent):
             try:
                 summary_fields = [
                     [1, 2, summary_title.encode('utf-8')],
+                    [2, 0, len(steps)],
                     [4, 2, trajectory_id.encode('utf-8')],
+                    [5, 0, 1],
                     [9, 2, encode([[1, 2, ws_uri.encode('utf-8')]])],
                     [15, 2, summary_title.encode('utf-8')],
+                    [16, 0, len(steps)],
                     [17, 2, encode(meta_fields)],
+                    [22, 0, 4],
                 ]
                 raw_summary = encode(summary_fields)
             except Exception:
@@ -310,6 +326,10 @@ class Antigravity(Agent):
             c.commit()
         finally:
             c.close()
+
+    def copy_exists(self, sid):
+        path = os.path.join(ROOT, 'conversations', sid + '.db')
+        return os.path.exists(lp(path))
 
     def delete(self, cp):
         cid = cp.get('id')
