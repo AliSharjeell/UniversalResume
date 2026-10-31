@@ -282,6 +282,7 @@ class AntigravityNativeCopy(unittest.TestCase):
 
         # Check trajectory db
         conv_db = os.path.join(self.tmp, 'conversations', cid + '.db')
+        self.assertTrue(agent.copy_exists(cid))
         c = sqlite3.connect(conv_db)
         meta = c.execute('select * from trajectory_meta').fetchall()
         self.assertEqual(len(meta), 1)
@@ -302,6 +303,7 @@ class AntigravityNativeCopy(unittest.TestCase):
 
         # Delete copy
         agent.delete(res2)
+        self.assertFalse(agent.copy_exists(cid))
         c = sqlite3.connect(db)
         row3 = c.execute('select * from conversation_summaries where conversation_id=?', (cid,)).fetchone()
         self.assertIsNone(row3)
