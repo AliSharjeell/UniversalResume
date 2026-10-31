@@ -31,6 +31,9 @@ class Agent:
         """
         return self.copyable or self.writable
 
+    def copy_exists(self, sid):
+        return True
+
     def detect(self):
         """Is this agent installed / used on this machine?"""
         return bool(self.binary and shutil.which(self.binary))
