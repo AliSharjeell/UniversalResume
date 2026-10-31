@@ -147,7 +147,8 @@ def cmd_resume(args):
         best = max(copies, key=lambda k: (th['copies'][k]['upto'], th['copies'][k]['owned']))
         cp = th['copies'][best]
         old_sid = best.split(':', 1)[1]
-        if cp.get('upto', 0) < len(th['elements']) and agent.can_copy and not getattr(args, 'handoff', False):
+        needs_write = cp.get('upto', 0) < len(th['elements']) or not agent.copy_exists(old_sid)
+        if needs_write and agent.can_copy and not getattr(args, 'handoff', False):
             try:
                 cfg = load_config()
                 write_target = dict(cp, id=old_sid) if cp.get('owned') else None
